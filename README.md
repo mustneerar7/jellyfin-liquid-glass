@@ -13,6 +13,12 @@ An Apple TV–style redesign of the Jellyfin **web** client, built around Apple'
   - If the item has trailers, they fade in **muted** behind the header after a few seconds and loop, with a glass mute/unmute button.
   - Local trailer files play first, then YouTube trailers from the metadata (ones named "trailer" or "teaser" are preferred).
   - Trailers pause when you scroll away or switch tabs, and are skipped with reduced motion or data saver on.
+- **Music (Apple Music on Apple TV / iOS):**
+  - **Player bar:** a floating Liquid Glass capsule with artwork, transport, volume and a hairline progress bar. On phones it becomes the iOS mini player above the tab bar.
+  - **Now Playing:** full screen over a slowly drifting, blurred wash of the album art. Large artwork that settles back when paused, a knob-less scrubber, big transport controls, volume, lyrics / shuffle / repeat, and a glass "Playing Next" queue.
+  - **Lyrics:** big bold lines over the same artwork background.
+  - **Album, artist and playlist pages:** an artwork colour wash, the artist in Apple Music red, Play and Shuffle buttons, and a clean numbered track list with animated level bars on the song that's playing. On phones the album header is centred, as in iOS Music.
+  - SF Symbols–style icons replace the Material icons in the player. Favorites use a star. Artists are round, with a silhouette when there's no photo.
 - **Liquid Glass material:**
   - Translucent, blurred surfaces with light-catching rims and a specular highlight that follows the pointer.
   - Covers the sidebar, buttons, menus, dialogs, toasts, the alphabet picker, and the now-playing bar.

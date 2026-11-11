@@ -541,19 +541,21 @@
     maybeAutoplay(page, id);
     if (page.dataset.lgId === id) { ensureLogo(page); ensureTrailer(page, id); return; }
     page.dataset.lgId = id;
-    page.classList.remove('lg-cinematic', 'lg-has-logo');
+    page.classList.remove('lg-cinematic', 'lg-has-logo', 'lg-music-page', 'lg-music-noart');
     getJSON(`Items/${id}`, { userId: uid() }).then((it) => {
       if (page.dataset.lgId !== id) return;
       let bg = '';
       if (it.BackdropImageTags && it.BackdropImageTags.length) bg = imgUrl(it.Id, 'Backdrop/0', { maxWidth: 2560, tag: it.BackdropImageTags[0] });
       else if (it.ParentBackdropItemId && it.ParentBackdropImageTags && it.ParentBackdropImageTags.length) bg = imgUrl(it.ParentBackdropItemId, 'Backdrop/0', { maxWidth: 2560, tag: it.ParentBackdropImageTags[0] });
       else if (it.Type === 'Episode' && it.ImageTags && it.ImageTags.Primary) bg = imgUrl(it.Id, 'Primary', { maxWidth: 1920, tag: it.ImageTags.Primary });
+      if (isMusicItem(it) && it.Type !== 'MusicArtist') bg = '';   // albums & playlists use the Apple Music layout
       let logo = '';
       if (it.ImageTags && it.ImageTags.Logo) logo = imgUrl(it.Id, 'Logo', { maxWidth: 960, tag: it.ImageTags.Logo });
       else if (it.ParentLogoItemId && it.ParentLogoImageTag) logo = imgUrl(it.ParentLogoItemId, 'Logo', { maxWidth: 960, tag: it.ParentLogoImageTag });
       page.dataset.lgType = it.Type || '';
       page.dataset.lgLogo = logo;
       page._lgItem = it;
+      setupMusicPage(page, it);
       let layer = $(':scope > .lg-detail-bg', page);
       if (!layer) { layer = doc.createElement('div'); layer.className = 'lg-detail-bg'; page.insertBefore(layer, page.firstChild); }
       layer.style.backgroundImage = bg ? `url("${bg}")` : '';
@@ -823,6 +825,112 @@
     if (btn) { sessionStorage.removeItem('lg-autoplay'); btn.click(); }
   }
 
+  /* ---------------- Music: Apple Music–style player, Now Playing, album pages ----------------
+     Mostly CSS over Jellyfin's own player markup, so every control keeps working. The script adds
+     state classes, the artwork background, the "Playing Next" title and the playing-track marker. */
+  const isMusicItem = (it) => !!it && (['MusicAlbum', 'MusicArtist', 'Audio', 'MusicGenre'].includes(it.Type)
+    || (it.Type === 'Playlist' && it.MediaType === 'Audio'));
+  const mediaMeta = () => { try { return navigator.mediaSession && navigator.mediaSession.metadata; } catch (e) { return null; } };
+  let nowKey = '';
+  let nowId = null;
+
+  function setupMusicPage(page, it) {
+    const music = isMusicItem(it);
+    page.classList.toggle('lg-music-page', music);
+    if (!music) { delete page.dataset.lgMusic; return; }
+    page.dataset.lgMusic = it.Type;
+    let art = '';
+    if (it.ImageTags && it.ImageTags.Primary) art = imgUrl(it.Id, 'Primary', { maxWidth: 600, tag: it.ImageTags.Primary });
+    else if (it.AlbumId && it.AlbumPrimaryImageTag) art = imgUrl(it.AlbumId, 'Primary', { maxWidth: 600, tag: it.AlbumPrimaryImageTag });
+    page.classList.toggle('lg-music-noart', !art);
+    if (art) page.style.setProperty('--lg-music-art', `url("${art}")`); else page.style.removeProperty('--lg-music-art');
+    if (!$(':scope > .lg-music-wash', page)) {
+      const wash = doc.createElement('div');
+      wash.className = 'lg-music-wash';
+      wash.setAttribute('aria-hidden', 'true');
+      page.insertBefore(wash, page.firstChild);
+    }
+  }
+
+  function playerPaused(npPage) {
+    const ic = (npPage && $('.btnPlayPause .material-icons', npPage)) || $('.nowPlayingBar .nowPlayingBarCenter .playPauseButton .material-icons');
+    return !!ic && /\bplay_/.test(ic.className);
+  }
+
+  // Blurred, drifting artwork behind Now Playing and Lyrics.
+  function ensureArtBackground(page) {
+    let bg = $(':scope > .lg-np-bg', page);
+    if (!bg) {
+      bg = doc.createElement('div');
+      bg.className = 'lg-np-bg';
+      bg.setAttribute('aria-hidden', 'true');
+      bg.innerHTML = '<i></i><i></i>';
+      page.insertBefore(bg, page.firstChild);
+    }
+    const img = $('.nowPlayingPageImage', page);
+    let src = img && !img.classList.contains('hide') ? (img.getAttribute('src') || '') : '';
+    if (!src) { const m = mediaMeta(); const a = (m && m.artwork) || []; if (a.length) src = a[a.length - 1].src || ''; }
+    if ((bg.dataset.src || '') !== src) {
+      bg.dataset.src = src;
+      bg.style.setProperty('--lg-np-art', src ? `url("${src.replace(/"/g, '%22')}")` : 'none');
+    }
+  }
+
+  // Which item is playing: ask the server for this device's session when the song changes.
+  function trackNowPlaying(active) {
+    const m = active ? mediaMeta() : null;
+    const key = m && m.title ? [m.title, m.artist, m.album].join('\u0000') : '';
+    if (key === nowKey) return;
+    nowKey = key;
+    nowId = null;
+    markPlaying();
+    if (!key) return;
+    const lookup = (tries) => getJSON('Sessions', { deviceId: api().deviceId() }).then((list) => {
+      if (nowKey !== key) return;
+      const item = list && list[0] && list[0].NowPlayingItem;
+      if (item && item.Name === m.title) { nowId = item.Id; markPlaying(); }
+      else if (tries > 0) setTimeout(() => lookup(tries - 1), 1500);
+    }).catch((e) => log('now playing', e));
+    lookup(4);
+  }
+
+  function markPlaying() {
+    $$('.lg-music-list .listItem.lg-playing').forEach((el) => { if (el.dataset.id !== nowId) el.classList.remove('lg-playing'); });
+    if (nowId) $$(`.lg-music-list .listItem[data-id="${nowId}"]`).forEach((el) => el.classList.add('lg-playing'));
+  }
+
+  function ensureMusic() {
+    const r = routeName();
+    const bar = $('.nowPlayingBar');
+    const barOn = !!bar && !bar.classList.contains('nowPlayingBar-hidden') && !bar.classList.contains('hide');
+    root.classList.toggle('lg-player-on', barOn);
+    const npPage = $('.nowPlayingPage:not(.hide)');
+    const lyrPage = $('.lyricPage:not(.hide)');
+    const open = (r === 'queue' && !!npPage) || (r === 'lyrics' && !!lyrPage);
+    root.classList.toggle('lg-np-open', open);
+    const paused = playerPaused(r === 'queue' ? npPage : null);
+    root.classList.toggle('lg-paused', paused);
+    if (open) ensureArtBackground(r === 'queue' ? npPage : lyrPage);
+    if (npPage) {
+      npPage.classList.toggle('lg-np-paused', paused);
+      // Phone layout uses the shuffle/repeat beside the transport and hides the bottom-row pair;
+      // move the working ones down so the controls read like Apple Music.
+      const row = $('.nowPlayingSecondaryButtons', npPage);
+      ['btnShuffleQueue', 'btnRepeat'].forEach((c) => {
+        const top = $(`.nowPlayingInfoButtons > .${c}`, npPage);
+        const low = row && $(`:scope > .${c}:not(.lg-moved)`, row);
+        if (top && low && low.classList.contains('hide') && !top.classList.contains('hide')) { top.classList.add('lg-moved'); row.appendChild(top); }
+      });
+      const head = $('.playlistSectionButton', npPage);
+      if (head && !$('.lg-np-queue-title', head)) head.insertAdjacentHTML('afterbegin', '<h2 class="lg-np-queue-title">Playing Next</h2>');
+    }
+    const music = r === 'music' || !!$('.itemDetailPage.lg-music-page:not(.hide)');
+    root.classList.toggle('lg-route-music', music);
+    if (music) $$('.page:not(.hide) .itemsContainer.vertical-list:not(.lg-music-list)').forEach((l) => l.classList.add('lg-music-list'));
+    trackNowPlaying(barOn || open);
+    markPlaying();
+  }
+
   /* ---------------- Specular light that follows the pointer ---------------- */
   const LIGHT_SEL = '.lg-glass, .lg-btn, .lg-nav-panel, .lg-nav-item, .detailButton, .MuiMenu-paper';
   let lightFrame = 0, lightEvt = null;
@@ -851,6 +959,7 @@
       updateNav();
       ensureHero();
       ensureDetail();
+      ensureMusic();
       ensureAppearanceRow();
     } catch (e) {
       log('tick', e);
