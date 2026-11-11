@@ -1,0 +1,26 @@
+# Example Podman Quadlet for Jellyfin with the Liquid Glass theme kept applied across
+# restarts and image updates. Save as ~/.config/containers/systemd/jellyfin.container,
+# adjust the paths, then: systemctl --user daemon-reload && systemctl --user start jellyfin
+[Unit]
+Description=Jellyfin media server
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=jellyfin
+Image=docker.io/jellyfin/jellyfin:latest
+PublishPort=8096:8096/tcp
+Volume=/path/to/jellyfin/config:/config:Z
+Volume=/path/to/jellyfin/cache:/cache:Z
+Volume=/path/to/media:/media:z
+# Liquid Glass: mount the theme's web/ folder (edits go live on browser refresh)
+Volume=/path/to/jellyfin-liquid-glass/web:/jellyfin/jellyfin-web/liquidglass:ro,z
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+# Liquid Glass: add the <link>/<script> tags to index.html on every start
+ExecStartPost=/path/to/jellyfin-liquid-glass/apply.sh
+
+[Install]
+WantedBy=default.target

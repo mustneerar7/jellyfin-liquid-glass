@@ -1,0 +1,1002 @@
+/* =====================================================================
+   Liquid Glass — an Apple TV–style redesign for Jellyfin web
+   Follows Apple's Human Interface Guidelines: system colours, SF-style
+   type scale, 44pt targets, continuous corners, Liquid Glass materials,
+   light / dark appearance, reduced-motion / reduced-transparency support.
+
+   Pairs with liquidglass.js (sidebar, featured hero, cinematic pages,
+   appearance switch). Installed into Jellyfin's web client by apply.sh.
+   ===================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap");
+
+/* ------------------------------------------------------------------ */
+/* 1. Tokens                                                           */
+/*    Dark is the default. html.lg-light switches to light. Elements   */
+/*    marked as dark islands (hero, cinematic header) always use dark. */
+/* ------------------------------------------------------------------ */
+:root {
+  --lg-blue: #0a84ff;
+  --lg-red: #ff453a;
+  --lg-green: #30d158;
+  --lg-yellow: #ffd60a;
+
+  --lg-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Inter", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+
+  --lg-r-sm: 10px;
+  --lg-r: 14px;
+  --lg-r-lg: 22px;
+  --lg-r-xl: 30px;
+
+  --lg-glass-blur: blur(22px) saturate(185%) brightness(1.08);
+  --lg-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --lg-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --lg-rail: 72px;
+  --lg-rail-gap: 16px;
+  --lg-rail-space: 0px;
+  --lg-gutter: 4vw;
+
+  /* Page colour as seen *outside* dark islands (islands fade into it) */
+  --lg-page-bg: #000;
+
+  --jf-card-borderRadius: 14px !important;
+  --jf-palette-primary-main: #0a84ff !important;
+  --jf-palette-primary-dark: #0071e3 !important;
+  --jf-palette-primary-mainChannel: 10 132 255 !important;
+  --jf-palette-secondary-main: #0a84ff !important;
+  --jf-palette-AppBar-defaultBg: transparent !important;
+}
+
+/* Dark appearance (default, and inside dark islands) */
+:root,
+.lg-hero,
+html.lg-light .itemDetailPage.lg-cinematic .detailPagePrimaryContainer,
+html.lg-light .itemDetailPage.lg-cinematic .lg-detail-bg {
+  --lg-bg: #000;
+  --lg-bg-2: #1c1c1e;
+  --lg-bg-3: #2c2c2e;
+  --lg-label: #fff;
+  --lg-label-2: rgba(235, 235, 245, 0.62);
+  --lg-label-3: rgba(235, 235, 245, 0.32);
+  --lg-text-body: rgba(255, 255, 255, 0.86);
+  --lg-text-meta: rgba(255, 255, 255, 0.78);
+  --lg-fill: rgba(120, 120, 128, 0.36);
+  --lg-fill-2: rgba(120, 120, 128, 0.24);
+  --lg-fill-hover: rgba(120, 120, 128, 0.5);
+  --lg-separator: rgba(84, 84, 88, 0.6);
+  --lg-hover: rgba(255, 255, 255, 0.08);
+  --lg-selected: rgba(255, 255, 255, 0.16);
+  --lg-selected-rim: inset 0 1px 0.5px rgba(255,255,255,.35), inset 0 0 0 .5px rgba(255,255,255,.14);
+  --lg-on-glass: #fff;
+  --lg-prominent-bg: #fff;
+  --lg-prominent-fg: #000;
+  --lg-prominent-hover: #f2f2f7;
+  --lg-segment-bg: rgba(255, 255, 255, 0.9);
+  --lg-segment-fg: #000;
+
+  --lg-glass-tint: rgba(255, 255, 255, 0.07);
+  --lg-glass-base: rgba(30, 30, 32, 0.74);
+  --lg-glass-btn: rgba(255, 255, 255, 0.12);
+  --lg-glass-btn-hover: rgba(255, 255, 255, 0.22);
+  --lg-nav-bg: rgba(30, 30, 32, 0.66);
+  --lg-nav-bg-open: rgba(30, 30, 32, 0.9);
+  --lg-glass-rim:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0.5px rgba(255, 255, 255, 0.10),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
+    inset 0 0 22px rgba(255, 255, 255, 0.035);
+  --lg-glass-lift: 0 12px 34px -8px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --lg-glass-sheen: rgba(255, 255, 255, 0.10);
+
+  --lg-card-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.6);
+  --lg-card-shadow-hover: 0 26px 48px -10px rgba(0, 0, 0, 0.85);
+  --lg-placeholder: radial-gradient(120% 120% at 0% 0%, #3a3a3c 0%, #1c1c1e 60%);
+  --lg-placeholder-icon: rgba(255, 255, 255, 0.55);
+  --lg-scroll-thumb: rgba(255, 255, 255, 0.18);
+  --lg-focus: rgba(255, 255, 255, 0.9);
+  --lg-modal-scrim: rgba(0, 0, 0, 0.35);
+  --lg-activity-filter: drop-shadow(0 1px 6px rgba(0,0,0,.45));
+
+  --jf-palette-background-default: #000 !important;
+  --jf-palette-background-paper: #1c1c1e !important;
+  --jf-palette-text-primary: #fff !important;
+  --jf-palette-text-secondary: rgba(235, 235, 245, 0.62) !important;
+  --jf-palette-divider: rgba(84, 84, 88, 0.6) !important;
+  --jf-palette-action-hover: rgba(255, 255, 255, 0.08) !important;
+  --jf-palette-action-active: rgba(255, 255, 255, 0.56) !important;
+  --jf-palette-action-selected: rgba(255, 255, 255, 0.16) !important;
+  --jf-palette-action-disabled: rgba(255, 255, 255, 0.3) !important;
+  --jf-palette-text-disabled: rgba(255, 255, 255, 0.5) !important;
+  --jf-palette-Button-inheritContainedBg: rgba(120, 120, 128, 0.36) !important;
+  --jf-palette-Button-inheritContainedHoverBg: rgba(120, 120, 128, 0.5) !important;
+  color-scheme: dark;
+}
+
+/* Light appearance */
+html.lg-light {
+  --lg-page-bg: #f2f2f7;
+  --lg-bg: #f2f2f7;
+  --lg-bg-2: #ffffff;
+  --lg-bg-3: #e5e5ea;
+  --lg-label: #000;
+  --lg-label-2: rgba(60, 60, 67, 0.62);
+  --lg-label-3: rgba(60, 60, 67, 0.32);
+  --lg-text-body: rgba(0, 0, 0, 0.82);
+  --lg-text-meta: rgba(60, 60, 67, 0.8);
+  --lg-fill: rgba(120, 120, 128, 0.2);
+  --lg-fill-2: rgba(118, 118, 128, 0.12);
+  --lg-fill-hover: rgba(120, 120, 128, 0.28);
+  --lg-separator: rgba(60, 60, 67, 0.22);
+  --lg-hover: rgba(0, 0, 0, 0.05);
+  --lg-selected: rgba(255, 255, 255, 0.95);
+  --lg-selected-rim: 0 1px 3px rgba(0,0,0,.12), 0 4px 14px -4px rgba(0,0,0,.18), inset 0 0 0 .5px rgba(0,0,0,.04);
+  --lg-on-glass: #1d1d1f;
+  --lg-prominent-bg: #1d1d1f;
+  --lg-prominent-fg: #fff;
+  --lg-prominent-hover: #3a3a3c;
+  --lg-segment-bg: #fff;
+  --lg-segment-fg: #000;
+
+  --lg-glass-tint: rgba(255, 255, 255, 0.55);
+  --lg-glass-base: rgba(250, 250, 252, 0.84);
+  --lg-glass-btn: rgba(255, 255, 255, 0.7);
+  --lg-glass-btn-hover: rgba(255, 255, 255, 0.92);
+  --lg-nav-bg: rgba(255, 255, 255, 0.62);
+  --lg-nav-bg-open: rgba(252, 252, 254, 0.9);
+  --lg-glass-rim:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0.5px rgba(255, 255, 255, 0.5),
+    inset 0 0 0 0.5px rgba(0, 0, 0, 0.07);
+  --lg-glass-lift: 0 12px 34px -12px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --lg-glass-sheen: rgba(255, 255, 255, 0.6);
+
+  --lg-card-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.28);
+  --lg-card-shadow-hover: 0 22px 40px -12px rgba(0, 0, 0, 0.38);
+  --lg-placeholder: radial-gradient(120% 120% at 0% 0%, #ffffff 0%, #e5e5ea 70%);
+  --lg-placeholder-icon: rgba(60, 60, 67, 0.45);
+  --lg-scroll-thumb: rgba(0, 0, 0, 0.2);
+  --lg-focus: rgba(0, 0, 0, 0.85);
+  --lg-modal-scrim: rgba(0, 0, 0, 0.18);
+  --lg-activity-filter: invert(1) opacity(.62);
+
+  --jf-palette-background-default: #f2f2f7 !important;
+  --jf-palette-background-paper: #ffffff !important;
+  --jf-palette-text-primary: #000 !important;
+  --jf-palette-text-secondary: rgba(60, 60, 67, 0.62) !important;
+  --jf-palette-divider: rgba(60, 60, 67, 0.22) !important;
+  --jf-palette-action-hover: rgba(0, 0, 0, 0.05) !important;
+  --jf-palette-action-active: rgba(0, 0, 0, 0.54) !important;
+  --jf-palette-action-selected: rgba(0, 0, 0, 0.08) !important;
+  --jf-palette-action-disabled: rgba(0, 0, 0, 0.26) !important;
+  --jf-palette-text-disabled: rgba(0, 0, 0, 0.38) !important;
+  --jf-palette-Button-inheritContainedBg: rgba(120, 120, 128, 0.2) !important;
+  --jf-palette-Button-inheritContainedHoverBg: rgba(120, 120, 128, 0.28) !important;
+  color-scheme: light;
+}
+
+@media (min-width: 760px) {
+  html.lg-nav-on:not(.lg-nav-hidden) { --lg-rail-space: calc(var(--lg-rail) + var(--lg-rail-gap) * 2); }
+}
+
+/* Smooth appearance switches */
+html.lg-appearance-anim, html.lg-appearance-anim body, html.lg-appearance-anim .lg-nav-panel {
+  transition: background-color .35s var(--lg-ease), color .35s var(--lg-ease);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Base                                                             */
+/* ------------------------------------------------------------------ */
+html, body, .backgroundContainer, .ui-corner-all, .nowPlayingPlaylist {
+  background-color: var(--lg-bg) !important;
+  background-image: none !important;
+}
+.backgroundContainer.withBackdrop { opacity: 0.5 !important; }
+/* Jellyfin's own rotating backdrops would show a different show behind our hero */
+html.lg-has-hero .backdropContainer, html.lg-has-hero .backgroundContainer.withBackdrop,
+html.lg-cinematic-page .backdropContainer, html.lg-cinematic-page .backgroundContainer.withBackdrop {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+html, body, button, input, select, textarea,
+.emby-button, .emby-input, .emby-select, .emby-textarea,
+.MuiTypography-root, .MuiButtonBase-root, .MuiInputBase-root, .MuiMenuItem-root, .MuiListItemText-primary {
+  font-family: var(--lg-font) !important;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+html { color: var(--lg-label-2); }
+body { color: var(--lg-label); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--lg-scroll-thumb) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--lg-scroll-thumb); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::selection { background: rgba(10, 132, 255, 0.4); }
+
+:focus-visible { outline: 2px solid var(--lg-focus) !important; outline-offset: 3px; border-radius: 10px; }
+
+/* ------------------------------------------------------------------ */
+/* 3. Liquid Glass material                                            */
+/* ------------------------------------------------------------------ */
+.lg-glass,
+.lg-btn-glass,
+.MuiMenu-paper, .MuiPopover-paper,
+.MuiDialog-paper,
+.actionSheet,
+.dialog:not(.dialog-fullscreen):not(.dialog-fullscreen-lowres):not(.videoPlayerContainer),
+.toast,
+.alphaPicker,
+.nowPlayingBar {
+  position: relative;
+  background-color: var(--lg-glass-tint) !important;
+  background-image:
+    radial-gradient(120% 90% at var(--lg-mx, 30%) var(--lg-my, 0%), var(--lg-glass-sheen), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.015)) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur);
+  backdrop-filter: var(--lg-glass-blur);
+  box-shadow: var(--lg-glass-rim), var(--lg-glass-lift) !important;
+  border: none !important;
+  color: var(--lg-on-glass);
+}
+.MuiMenu-paper, .MuiPopover-paper, .MuiDialog-paper, .actionSheet,
+.dialog:not(.dialog-fullscreen):not(.dialog-fullscreen-lowres):not(.videoPlayerContainer) {
+  background-color: var(--lg-glass-base) !important;
+  border-radius: var(--lg-r-lg) !important;
+  color: var(--lg-label);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lg-glass, .lg-btn-glass, .MuiMenu-paper, .MuiPopover-paper, .MuiDialog-paper,
+  .actionSheet, .dialog, .toast, .alphaPicker, .nowPlayingBar, .lg-nav-panel {
+    background: var(--lg-bg-2) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-nav-panel, .lg-glass, .lg-btn-glass { background-color: var(--lg-bg-2) !important; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Navigation — floating glass sidebar (desktop) / tab bar (phone)  */
+/* ------------------------------------------------------------------ */
+
+/* Retire the top nav row of Jellyfin's app bar (not the dashboard's or player's). Library pages
+   keep their second row (view switcher, Play All, sort, filter). Pure CSS on purpose: React
+   re-renders the bar while scrolling, so JS-added classes would flicker. */
+html.lg-nav-on:not(.lg-nav-hidden) header.MuiAppBar-root:not(.dashboard-appBar):not(.videoOsd-appBar) > .MuiToolbar-root:first-child { display: none !important; }
+html.lg-nav-on:not(.lg-nav-hidden) header.MuiAppBar-root:not(.dashboard-appBar):not(.videoOsd-appBar):not(:has(> .MuiToolbar-root ~ .MuiToolbar-root)),
+html.lg-nav-on:not(.lg-nav-hidden) header.MuiAppBar-root:not(.dashboard-appBar):not(.videoOsd-appBar):not(:has(> .MuiToolbar-root ~ .MuiToolbar-root)) + div:empty { display: none !important; }
+html.lg-nav-on:not(.lg-nav-hidden) header.MuiAppBar-root:not(.dashboard-appBar):not(.videoOsd-appBar):has(> .MuiToolbar-root ~ .MuiToolbar-root) {
+  left: var(--lg-rail-space) !important;
+  right: 0 !important;
+  width: auto !important;
+  padding-top: 10px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--lg-bg) 94%, transparent) 0%,
+    color-mix(in srgb, var(--lg-bg) 72%, transparent) 60%,
+    transparent 100%) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  color: var(--lg-label) !important;
+}
+html.lg-nav-on:not(.lg-nav-hidden) header.MuiAppBar-root:not(.dashboard-appBar):not(.videoOsd-appBar):has(> .MuiToolbar-root ~ .MuiToolbar-root) > .MuiToolbar-root {
+  padding-left: 3.3% !important;
+  padding-right: 3.3% !important;
+  gap: 10px;
+}
+header.MuiAppBar-root .MuiTypography-h2 { font-size: 28px !important; font-weight: 800 !important; letter-spacing: -0.025em; color: var(--lg-label); }
+header.MuiAppBar-root .MuiButtonGroup-text { background: var(--lg-fill-2); border-radius: 999px !important; padding: 2px; }
+header.MuiAppBar-root .MuiButtonGroup-text .MuiButton-root { border: 0 !important; min-width: 40px; height: 36px; border-radius: 999px !important; color: var(--lg-label) !important; opacity: .88; }
+header.MuiAppBar-root .MuiButtonGroup-text .MuiButton-root:hover { background: var(--lg-hover) !important; opacity: 1; }
+header.MuiAppBar-root .MuiButtonGroup-contained .MuiButton-root { height: 36px; }
+html.lg-nav-on:not(.lg-nav-hidden) .skinHeader:not(.osdHeader) { display: none !important; }
+html.lg-nav-on:not(.lg-nav-hidden) main.MuiBox-root { padding-top: 0 !important; }
+/* Jellyfin pages are absolutely positioned, so shift them clear of the rail */
+html.lg-nav-on:not(.lg-nav-hidden) main .mainAnimatedPage { left: var(--lg-rail-space) !important; }
+html.lg-nav-on:not(.lg-nav-hidden) .pageWithAbsoluteTabs:not(.noSecondaryNavPage) { padding-top: 1.5em !important; }
+html.lg-nav-on:not(.lg-nav-hidden) .libraryPage:not(.withTabs):not(.itemDetailPage) { padding-top: 1.25em !important; }
+html.lg-nav-hidden .lg-nav, html.lg-nav-hidden .lg-back { display: none !important; }
+
+.lg-nav, .lg-nav *, .lg-nav *::before, .lg-nav *::after, .lg-back { box-sizing: border-box; }
+.lg-nav {
+  position: fixed;
+  z-index: 1000;
+  left: var(--lg-rail-gap);
+  top: var(--lg-rail-gap);
+  bottom: var(--lg-rail-gap);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.lg-nav-panel {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: var(--lg-rail);
+  max-height: 100%;
+  padding: 12px 10px;
+  border-radius: var(--lg-r-xl);
+  overflow: hidden;
+  background-color: var(--lg-nav-bg);
+  background-image:
+    radial-gradient(140% 60% at var(--lg-mx, 0%) var(--lg-my, 0%), var(--lg-glass-sheen), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01));
+  -webkit-backdrop-filter: var(--lg-glass-blur);
+  backdrop-filter: var(--lg-glass-blur);
+  box-shadow: var(--lg-glass-rim), var(--lg-glass-lift);
+  transition: width .45s var(--lg-spring), background-color .3s;
+}
+.lg-nav:hover .lg-nav-panel,
+.lg-nav:focus-within .lg-nav-panel,
+.lg-nav.is-open .lg-nav-panel {
+  width: 248px;
+  background-color: var(--lg-nav-bg-open);
+}
+.lg-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.lg-nav-sep { height: 0.5px; background: var(--lg-separator); margin: 8px 10px; flex-shrink: 0; }
+.lg-nav-spacer { flex: 1 1 auto; min-height: 8px; }
+.lg-nav-scroll { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; min-height: 0; }
+.lg-nav-scroll::-webkit-scrollbar { display: none; }
+
+.lg-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 48px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 16px;
+  color: var(--lg-label-2) !important;
+  text-decoration: none !important;
+  font: 600 17px/1.2 var(--lg-font);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  flex-shrink: 0;
+  transition: background-color .25s var(--lg-ease), color .2s, transform .35s var(--lg-spring), box-shadow .25s;
+}
+.lg-nav-item svg { width: 24px; height: 24px; flex: 0 0 24px; }
+.lg-nav-item:hover { background: var(--lg-hover); color: var(--lg-label) !important; }
+.lg-nav-item:active { transform: scale(.96); }
+.lg-nav-item.is-active {
+  color: var(--lg-label) !important;
+  background-color: var(--lg-selected);
+  box-shadow: var(--lg-selected-rim);
+}
+.lg-nav-label {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity .25s var(--lg-ease), transform .35s var(--lg-spring);
+}
+.lg-nav:hover .lg-nav-label,
+.lg-nav:focus-within .lg-nav-label,
+.lg-nav.is-open .lg-nav-label { opacity: 1; transform: none; transition-delay: .06s; }
+.lg-nav-appearance .lg-nav-value { margin-left: auto; font-size: 15px; font-weight: 500; color: var(--lg-label-3); }
+
+.lg-avatar {
+  width: 30px; height: 30px; flex: 0 0 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5e5ce6, #0a84ff) center/cover no-repeat;
+  box-shadow: inset 0 0 0 .5px rgba(255,255,255,.35), 0 2px 8px rgba(0,0,0,.3);
+  display: grid; place-items: center;
+  color: #fff; font-size: 14px; font-weight: 700;
+}
+.lg-nav-profile { height: 52px; margin-bottom: 6px; padding-left: 11px; }
+.lg-nav-profile .lg-nav-label { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; min-width: 0; }
+.lg-nav-profile .lg-nav-name { overflow: hidden; text-overflow: ellipsis; color: var(--lg-label); }
+.lg-nav-profile .lg-nav-sub { font-size: 12px; font-weight: 500; color: var(--lg-label-2); }
+
+.lg-back {
+  position: fixed;
+  z-index: 999;
+  top: 20px;
+  left: calc(var(--lg-rail-space) + 4px);
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--lg-on-glass); cursor: pointer; border: 0;
+  transition: transform .35s var(--lg-spring), opacity .25s;
+}
+.lg-back svg { width: 22px; height: 22px; }
+.lg-back:hover { transform: scale(1.08); }
+.lg-back[hidden] { display: none; }
+
+@media (max-width: 759px) {
+  .lg-nav {
+    left: 12px; right: 12px; top: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    justify-content: center;
+  }
+  .lg-nav-panel,
+  .lg-nav:hover .lg-nav-panel, .lg-nav:focus-within .lg-nav-panel {
+    background-color: var(--lg-nav-bg-open);
+    flex-direction: row;
+    width: auto;
+    max-width: 100%;
+    padding: 6px;
+    border-radius: 999px;
+  }
+  .lg-nav-group, .lg-nav-scroll { flex-direction: row; overflow: visible; }
+  .lg-nav-sep, .lg-nav-spacer, .lg-nav-sys, .lg-nav-profile .lg-nav-label { display: none !important; }
+  .lg-nav-profile { order: 99; margin: 0; }
+  .lg-nav-item {
+    flex-direction: column; justify-content: center; gap: 2px;
+    height: 54px; min-width: 58px; padding: 0 8px;
+    border-radius: 999px; font-size: 10px; font-weight: 600;
+  }
+  .lg-nav-item svg { width: 22px; height: 22px; flex-basis: 22px; }
+  .lg-nav-label, .lg-nav:hover .lg-nav-label { opacity: 1; transform: none; max-width: 64px; overflow: hidden; text-overflow: ellipsis; }
+  .lg-nav-libs .lg-nav-item:nth-child(n+3) { display: none; }
+  html.lg-nav-on:not(.lg-nav-hidden) .skinBody { padding-bottom: 96px; }
+  .lg-back { top: 12px; left: 12px; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Buttons                                                          */
+/* ------------------------------------------------------------------ */
+.lg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45em;
+  height: 52px; min-width: 52px; padding: 0 26px;
+  border-radius: 999px; border: 0;
+  font: 600 17px/1 var(--lg-font); letter-spacing: -0.01em;
+  color: var(--lg-on-glass); cursor: pointer; text-decoration: none;
+  transition: transform .4s var(--lg-spring), background-color .2s, box-shadow .3s;
+}
+.lg-btn svg { width: 20px; height: 20px; flex: 0 0 auto; }
+.lg-btn:hover { transform: scale(1.05); }
+.lg-btn:active { transform: scale(.97); }
+.lg-btn-primary {
+  background: var(--lg-prominent-bg); color: var(--lg-prominent-fg);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.12), 0 10px 30px -10px rgba(0,0,0,.6);
+}
+.lg-btn-primary:hover { background: var(--lg-prominent-hover); }
+.lg-btn-icon { padding: 0; width: 52px; }
+
+.raised, .fab, a[data-role=button], .MuiButton-contained, .MuiButtonGroup-contained .MuiButton-root {
+  border-radius: 999px !important;
+  background: var(--lg-fill) !important;
+  color: var(--lg-label) !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  box-shadow: inset 0 1px 0.5px rgba(255,255,255,.22), inset 0 0 0 .5px rgba(255,255,255,.1) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur);
+  backdrop-filter: var(--lg-glass-blur);
+  transition: transform .35s var(--lg-spring), background-color .2s !important;
+}
+.raised:hover, .fab:hover, a[data-role=button]:hover, .MuiButton-contained:hover { background: var(--lg-fill-hover) !important; }
+.MuiButtonGroup-root { border-radius: 999px !important; box-shadow: none !important; overflow: hidden; }
+.MuiButtonGroup-root .MuiButton-root { border-radius: 0 !important; border-color: var(--lg-separator) !important; }
+.MuiButtonGroup-root .MuiButton-root:first-child { border-radius: 999px 0 0 999px !important; }
+.MuiButtonGroup-root .MuiButton-root:last-child { border-radius: 0 999px 999px 0 !important; }
+.MuiButton-containedPrimary, .MuiButtonGroup-root .MuiButton-containedPrimary,
+.button-submit, .raised.button-submit { background: var(--lg-prominent-bg) !important; color: var(--lg-prominent-fg) !important; }
+.MuiButton-containedPrimary:hover, .button-submit:hover { background: var(--lg-prominent-hover) !important; }
+.button-delete, .raised.button-delete, .MuiButton-containedError { background: var(--lg-red) !important; color: #fff !important; }
+.MuiIconButton-root, .paper-icon-button-light { border-radius: 50% !important; transition: background-color .2s, transform .35s var(--lg-spring) !important; }
+.MuiIconButton-root:hover, .paper-icon-button-light:hover:not(:disabled) { background-color: var(--lg-hover) !important; color: var(--lg-label) !important; }
+
+/* ------------------------------------------------------------------ */
+/* 6. Featured hero ("Top Shelf") — a dark island in both appearances  */
+/* ------------------------------------------------------------------ */
+.lg-hero {
+  position: relative;
+  height: clamp(460px, 82vh, 920px);
+  margin-bottom: -9vh;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+  background: #000;
+}
+.lg-hero-slide {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden;
+  will-change: opacity;
+  transition: opacity 1.1s var(--lg-ease), visibility 0s linear 1.1s;
+}
+.lg-hero-slide.is-active { opacity: 1; visibility: visible; transition: opacity 1.1s var(--lg-ease), visibility 0s; z-index: 1; }
+.lg-hero-art {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center 22%;
+  transform: scale(1.08);
+  transition: transform 9s linear;
+}
+.lg-hero-slide.is-active .lg-hero-art { transform: scale(1.0); }
+.lg-hero-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(0deg, var(--lg-page-bg) 0%, color-mix(in srgb, var(--lg-page-bg) 92%, transparent) 9%, rgba(0,0,0,.55) 26%, rgba(0,0,0,0) 52%),
+    linear-gradient(90deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.42) 32%, rgba(0,0,0,0) 62%),
+    linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 16%);
+}
+html.lg-light .lg-hero { margin-bottom: -4vh; }
+html.lg-light .lg-hero-scrim {
+  background:
+    linear-gradient(0deg, var(--lg-page-bg) 0%, color-mix(in srgb, var(--lg-page-bg) 70%, transparent) 6%, rgba(0,0,0,0) 16%),
+    linear-gradient(20deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 62%),
+    linear-gradient(90deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,.2) 34%, rgba(0,0,0,0) 60%),
+    linear-gradient(180deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 14%);
+}
+.lg-hero-content {
+  position: absolute;
+  left: calc(var(--lg-rail-space) + var(--lg-gutter));
+  bottom: calc(9vh + 72px);
+  width: min(620px, 46vw);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .7s var(--lg-ease) .25s, transform .9s var(--lg-spring) .25s;
+}
+html.lg-light .lg-hero-content { bottom: calc(16% + 40px); }
+.lg-hero-slide.is-active .lg-hero-content { opacity: 1; transform: none; }
+.lg-hero-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.75); }
+.lg-hero-logo {
+  display: block;
+  max-width: min(460px, 38vw);
+  max-height: 150px;
+  object-fit: contain; object-position: left bottom;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,.55));
+}
+.lg-hero-title { margin: 0; font-size: clamp(34px, 4.4vw, 64px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; text-shadow: 0 2px 24px rgba(0,0,0,.5); }
+.lg-hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 15px; font-weight: 600; color: rgba(255,255,255,.8); }
+.lg-hero-meta .lg-dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .7; }
+.lg-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 5px; font-size: 12px; font-weight: 700; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 60%, transparent); }
+.lg-star { color: var(--lg-yellow); }
+.lg-hero-overview {
+  margin: 0; font-size: 17px; line-height: 1.45; font-weight: 450;
+  color: rgba(255,255,255,.88);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  text-shadow: 0 1px 12px rgba(0,0,0,.5);
+}
+.lg-hero-actions { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.lg-hero .lg-btn-glass { background-color: rgba(255,255,255,.14) !important; color: #fff; }
+
+.lg-hero-pager {
+  position: absolute; z-index: 3;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(9vh + 20px);
+  display: flex; gap: 8px; align-items: center;
+  padding: 9px 12px;
+  border-radius: 999px;
+}
+html.lg-light .lg-hero-pager { bottom: calc(16% - 4px); }
+.lg-hero .lg-hero-pager { background-color: rgba(255,255,255,.1) !important; }
+.lg-hero-pager button {
+  position: relative; overflow: hidden;
+  width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px;
+  background: rgba(255,255,255,.38); cursor: pointer;
+  transition: width .45s var(--lg-spring), background-color .2s;
+}
+.lg-hero-pager button.is-active { width: 34px; background: rgba(255,255,255,.3); }
+.lg-hero-pager button.is-active::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; background: #fff;
+  transform-origin: left; animation: lg-progress var(--lg-hero-interval, 8s) linear forwards;
+}
+.lg-hero.is-paused .lg-hero-pager button.is-active::after { animation-play-state: paused; }
+@keyframes lg-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.lg-hero-arrow {
+  position: absolute; z-index: 3; top: 42%;
+  width: 52px; height: 52px; border-radius: 50%; border: 0;
+  display: grid; place-items: center; color: #fff; cursor: pointer;
+  opacity: 0; transition: opacity .3s, transform .4s var(--lg-spring);
+}
+.lg-hero .lg-hero-arrow { background-color: rgba(255,255,255,.12) !important; }
+.lg-hero-arrow svg { width: 24px; height: 24px; }
+.lg-hero-arrow.prev { left: calc(var(--lg-rail-space) + 14px); }
+.lg-hero-arrow.next { right: 22px; }
+.lg-hero:hover .lg-hero-arrow, .lg-hero-arrow:focus-visible { opacity: 1; }
+.lg-hero-arrow:hover { transform: scale(1.08); }
+
+.lg-hero ~ .sections { position: relative; z-index: 2; }
+#homeTab, .homePage .homeTab { padding-top: 0 !important; }
+html.lg-has-hero .homePage { padding-top: 0 !important; }
+
+@media (max-width: 759px) {
+  .lg-hero { height: 72vh; margin-bottom: -4vh; }
+  .lg-hero-content, html.lg-light .lg-hero-content { left: 20px; right: 20px; width: auto; bottom: calc(4vh + 56px); }
+  .lg-hero-logo { max-width: 70vw; max-height: 96px; }
+  .lg-hero-overview { -webkit-line-clamp: 2; font-size: 15px; }
+  .lg-hero-pager, html.lg-light .lg-hero-pager { bottom: calc(4vh + 14px); }
+  .lg-hero-arrow { display: none; }
+  .lg-btn { height: 46px; font-size: 16px; padding: 0 20px; }
+  .lg-btn-icon { width: 46px; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Home rows & section titles                                       */
+/* ------------------------------------------------------------------ */
+.homePage .verticalSection, .homeSectionsContainer > .verticalSection { margin-bottom: 1.6em !important; }
+.sectionTitleContainer { margin-bottom: 0 !important; padding-left: var(--lg-gutter) !important; }
+.homeSectionsContainer .padded-left, .homeSectionsContainer .emby-scroller { padding-left: var(--lg-gutter) !important; }
+.homeSectionsContainer .emby-scroller { scroll-padding-left: var(--lg-gutter); }
+.sectionTitle, .sectionTitle-cards {
+  color: var(--lg-label) !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  margin-bottom: .1em !important;
+}
+.sectionTitle-link .material-icons, .sectionTitleTextButton .material-icons { color: var(--lg-label-3); font-size: 22px; }
+.sectionTitle-link:hover .material-icons { color: var(--lg-label); }
+
+/* ------------------------------------------------------------------ */
+/* 8. Cards                                                            */
+/* ------------------------------------------------------------------ */
+.cardImageContainer, .cardContent, .cardPadder, .blurhash-canvas, .cardOverlayContainer,
+.itemDetailImage, .cardBox:not(.visualCardBox) .cardPadder, .listItemImage {
+  border-radius: var(--lg-r) !important;
+}
+.cardScalable { border-color: transparent !important; }
+.cardBox:not(.visualCardBox) .cardPadder { background-color: var(--lg-bg-2) !important; }
+.cardPadder .cardImageIcon { color: var(--lg-placeholder-icon) !important; opacity: .5; }
+.visualCardBox { background: var(--lg-bg-2) !important; border-radius: var(--lg-r) !important; }
+
+.defaultCardBackground, .defaultCardBackground1, .defaultCardBackground2, .defaultCardBackground3,
+.defaultCardBackground4, .defaultCardBackground5 {
+  background: var(--lg-placeholder) !important;
+  color: var(--lg-label) !important;
+}
+.defaultCardBackground .cardImageIcon, .cardImageContainer .cardImageIcon { color: var(--lg-placeholder-icon) !important; }
+
+.emby-scroller .scrollSlider, .emby-scroller .itemsContainer { padding-top: 14px !important; padding-bottom: 18px !important; }
+
+/* Jellyfin's paint containment would clip the hover lift into square corners */
+.card { contain: layout style !important; }
+.cardBox { transition: transform .5s var(--lg-spring); }
+.cardImageContainer {
+  box-shadow: var(--lg-card-shadow);
+  transition: box-shadow .5s var(--lg-spring);
+}
+.cardImageContainer::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2;
+  box-shadow: inset 0 1px 0.5px rgba(255,255,255,.28), inset 0 0 0 .5px rgba(255,255,255,.10);
+  background: linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 32%);
+  opacity: 0; transition: opacity .4s var(--lg-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .cardBox { transform: scale(1.05) translateY(-4px); }
+  .card:hover .cardImageContainer { box-shadow: var(--lg-card-shadow-hover); }
+  .card:hover .cardImageContainer::after { opacity: 1; }
+}
+.card:focus-visible .cardBox, .card.show-focus:focus .cardBox { transform: scale(1.07); }
+.card:focus-visible .cardImageContainer::after { opacity: 1; }
+
+.cardOverlayContainer { background: linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,0) 55%) !important; }
+.cardOverlayButtonIcon, .cardOverlayButton-centered {
+  background-color: rgba(255,255,255,.2) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur); backdrop-filter: var(--lg-glass-blur);
+  border: none !important; color: #fff !important;
+  box-shadow: inset 0 1px 0.5px rgba(255,255,255,.4);
+}
+.cardOverlayButton:hover .cardOverlayButtonIcon { background-color: #fff !important; color: #000 !important; }
+
+.cardFooter { text-align: left !important; padding: 8px 2px 0 !important; }
+.cardText { color: var(--lg-label) !important; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.cardText-secondary, .cardFooter .cardText-secondary { color: var(--lg-label-2) !important; font-size: 13px; font-weight: 500; opacity: 1 !important; }
+
+/* Badges sit on artwork, so they stay dark glass in both appearances */
+.countIndicator, .playedIndicator, .indicator {
+  background: rgba(0,0,0,.45) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur); backdrop-filter: var(--lg-glass-blur);
+  color: #fff !important; font-weight: 700;
+  box-shadow: inset 0 1px 0.5px rgba(255,255,255,.35), inset 0 0 0 .5px rgba(255,255,255,.18);
+}
+.itemProgressBar, .cardProgressBar { background: rgba(255,255,255,.3) !important; border-radius: 99px; overflow: hidden; }
+.itemProgressBarForeground { background-color: #fff !important; border-radius: 99px; }
+.cardIndicators .itemProgressBar { margin: 0 10px 10px; height: 4px !important; }
+
+.personCard .cardScalable { margin: 0 10%; border-radius: 50% !important; }
+.personCard .cardPadder,
+.personCard .cardPadder-overflowPortrait,
+.personCard .cardPadder-portrait { padding-bottom: 100% !important; }
+.card.personCard .cardBox:not(.visualCardBox) .cardPadder { background: transparent !important; border-radius: 50% !important; }
+.personCard .cardImageContainer, .personCard .cardPadder, .personCard .cardContent,
+.personCard .blurhash-canvas, .personCard .cardOverlayContainer { border-radius: 50% !important; }
+.personCard .cardImageContainer { background-position: center 22% !important; background-color: var(--lg-bg-3) !important; }
+.personCard .cardImageIcon { font-size: 3em !important; }
+.personCard .cardText, .personCard .cardFooter { text-align: center !important; }
+.personCard .cardText-first { margin-top: 6px; }
+
+/* ------------------------------------------------------------------ */
+/* 9. Item detail — cinematic layout (set by liquidglass.js)           */
+/* ------------------------------------------------------------------ */
+.lg-detail-bg { display: none; }
+.itemDetailPage.lg-cinematic { position: relative; }
+.itemDetailPage.lg-cinematic .lg-detail-bg {
+  display: block;
+  position: absolute; z-index: 0;
+  top: 0;
+  left: calc(-1 * var(--lg-rail-space)); right: 0;
+  height: clamp(520px, 92vh, 1040px);
+  background-color: #000;
+  background-size: cover; background-position: center 20%;
+  animation: lg-fade-in .9s var(--lg-ease) both;
+}
+.itemDetailPage.lg-cinematic .lg-detail-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(0deg, #000 0%, rgba(0,0,0,.9) 16%, rgba(0,0,0,.45) 42%, rgba(0,0,0,0) 68%),
+    linear-gradient(90deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.45) 34%, rgba(0,0,0,0) 64%),
+    linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 14%);
+}
+/* Below the art: stay dark while the title/overview block continues (height measured by the
+   script), then dissolve into the page. In dark appearance both ends are black. */
+.itemDetailPage.lg-cinematic .lg-detail-bg::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%;
+  height: calc(var(--lg-detail-extra, 0px) + 160px);
+  background: linear-gradient(180deg, #000 0, #000 var(--lg-detail-extra, 0px), var(--lg-page-bg) 100%);
+}
+@keyframes lg-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.itemDetailPage.lg-cinematic .itemBackdrop,
+.itemDetailPage.lg-cinematic .detailLogo,
+.itemDetailPage.lg-cinematic .detailPagePrimaryContainer > .detailImageContainer,
+.itemDetailPage.lg-cinematic .infoWrapper > .detailImageContainer { display: none !important; }
+
+.itemDetailPage.lg-cinematic .detailPageWrapperContainer {
+  position: relative; z-index: 1;
+  padding-top: clamp(220px, 44vh, 520px) !important;
+  margin-top: 0 !important;
+  background: transparent !important;
+}
+.itemDetailPage.lg-cinematic .detailPagePrimaryContainer { display: block !important; color: var(--lg-label); }
+html.lg-light .itemDetailPage.lg-cinematic .detailPageSecondaryContainer { margin-top: 190px; }
+.itemDetailPage.lg-cinematic .detailRibbon {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 var(--lg-gutter) !important;
+  background: transparent !important;
+}
+.itemDetailPage.lg-cinematic .infoWrapper { width: 100%; max-width: 760px; }
+.itemDetailPage.lg-cinematic .detailPagePrimaryContent,
+.itemDetailPage.lg-cinematic .detailPageSecondaryContainer,
+.itemDetailPage.lg-cinematic .detailPageContent {
+  padding-left: var(--lg-gutter) !important;
+  padding-right: var(--lg-gutter) !important;
+}
+.itemDetailPage.lg-cinematic .detailSectionContent .overview { max-width: 760px; }
+
+.lg-detail-logo {
+  display: block;
+  max-width: min(480px, 40vw);
+  max-height: 160px;
+  margin: 0 0 18px;
+  object-fit: contain; object-position: left bottom;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,.6));
+}
+.itemDetailPage.lg-has-logo[data-lg-type="Series"] .nameContainer .itemName,
+.itemDetailPage.lg-has-logo[data-lg-type="Movie"] .nameContainer .itemName,
+.itemDetailPage.lg-has-logo[data-lg-type="Episode"] .nameContainer .parentName,
+.itemDetailPage.lg-has-logo[data-lg-type="Season"] .nameContainer .parentName { display: none !important; }
+
+.itemName { color: var(--lg-label) !important; font-weight: 800 !important; letter-spacing: -0.025em; }
+.itemDetailPage.lg-cinematic .itemName { font-size: clamp(30px, 3.4vw, 48px) !important; line-height: 1.06; text-shadow: 0 2px 20px rgba(0,0,0,.5); }
+.parentName { color: var(--lg-label-2); font-weight: 600; }
+.itemMiscInfo { color: var(--lg-text-meta); font-weight: 600; font-size: 15px; }
+.mediaInfoOfficialRating, .mediaInfoText {
+  border-radius: 5px !important; border: 0 !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 55%, transparent);
+  background: transparent !important;
+  font-weight: 700; font-size: 12px;
+}
+.starIcon { color: var(--lg-yellow) !important; }
+.itemGenres { color: var(--lg-label-2); font-weight: 600; }
+.overview, .detailSectionContent p { color: var(--lg-text-body); line-height: 1.5; font-size: 17px; }
+.detailPagePrimaryContainer a:not(.lg-btn), .itemDetailPage .detailSectionContent a { color: var(--lg-label); }
+
+/* Detail buttons: glass circles; Play is the prominent capsule */
+.mainDetailButtons { display: flex !important; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0 8px !important; justify-content: flex-start !important; }
+.mainDetailButtons .detailButton {
+  flex-direction: row !important;
+  width: 52px; height: 52px;
+  padding: 0 !important; margin: 0 !important;
+  border-radius: 999px !important;
+  color: var(--lg-on-glass) !important;
+  background-color: var(--lg-glass-btn) !important;
+  background-image: radial-gradient(100% 100% at var(--lg-mx, 50%) var(--lg-my, 0%), var(--lg-glass-sheen), transparent 65%) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur); backdrop-filter: var(--lg-glass-blur);
+  box-shadow: var(--lg-glass-rim), 0 8px 20px -8px rgba(0,0,0,.45) !important;
+  transition: transform .4s var(--lg-spring), background-color .2s !important;
+}
+.mainDetailButtons .detailButton:hover { transform: scale(1.08); background-color: var(--lg-glass-btn-hover) !important; }
+.mainDetailButtons .detailButton:active { transform: scale(.96); }
+.mainDetailButtons .detailButton-icon { font-size: 24px !important; }
+.mainDetailButtons .detailButton-text { display: none; }
+.mainDetailButtons .btnPlay {
+  width: auto !important;
+  padding: 0 28px 0 22px !important;
+  background: var(--lg-prominent-bg) !important; color: var(--lg-prominent-fg) !important;
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,.6) !important;
+  font: 600 17px var(--lg-font);
+}
+.mainDetailButtons .btnPlay::after { content: attr(title); margin-left: 6px; letter-spacing: -0.01em; }
+.mainDetailButtons .btnPlay .detailButton-icon { color: var(--lg-prominent-fg) !important; }
+.mainDetailButtons .btnPlay:hover { background: var(--lg-prominent-hover) !important; }
+.mainDetailButtons .btnUserRating.ratingbutton-withrating .detailButton-icon { color: var(--lg-red) !important; }
+
+.detailRibbon { background: transparent !important; }
+.detailPagePrimaryContainer, .detailPageWrapperContainer { background: transparent !important; }
+
+/* ------------------------------------------------------------------ */
+/* 10. Library pages                                                   */
+/* ------------------------------------------------------------------ */
+.alphaPicker { border-radius: 999px !important; padding: 8px 2px !important; }
+.alphaPickerButton { color: var(--lg-label-2) !important; font-weight: 600; border-radius: 50%; }
+.alphaPickerButton-selected, .alphaPickerButton:hover { color: var(--lg-label) !important; background: var(--lg-selected) !important; }
+.libraryPage .MuiToolbar-root .MuiTypography-root { font-weight: 700; letter-spacing: -0.02em; }
+.MuiChip-root { border-radius: 999px !important; background: var(--lg-fill-2) !important; color: var(--lg-label) !important; }
+
+.emby-tabs-slider { display: inline-flex; gap: 2px; padding: 4px; border-radius: 999px; }
+.emby-tab-button {
+  border-radius: 999px !important; padding: .55em 1.2em !important;
+  color: var(--lg-label-2) !important; font-weight: 600 !important;
+  transition: background-color .25s var(--lg-ease), color .2s;
+}
+.emby-tab-button:hover { color: var(--lg-label) !important; background: var(--lg-hover) !important; }
+.emby-tab-button-active, .emby-tab-button-active:hover { background: var(--lg-segment-bg) !important; color: var(--lg-segment-fg) !important; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+
+/* Newer (MUI) alphabet picker on library pages → glass capsule */
+.alphaPicker-fixed-right > .MuiPaper-root {
+  border-radius: 999px !important;
+  padding: 6px 2px !important;
+  background-color: var(--lg-glass-tint) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur); backdrop-filter: var(--lg-glass-blur);
+  box-shadow: var(--lg-glass-rim), var(--lg-glass-lift) !important;
+}
+.MuiToggleButton-root { color: var(--lg-label-2) !important; border: 0 !important; font-weight: 600 !important; }
+.MuiToggleButton-root:hover { color: var(--lg-label) !important; background: var(--lg-hover) !important; }
+.MuiToggleButton-root.Mui-selected { color: var(--lg-label) !important; background: var(--lg-selected) !important; }
+
+/* ------------------------------------------------------------------ */
+/* 11. Menus, dialogs, lists, inputs                                   */
+/* ------------------------------------------------------------------ */
+.MuiMenu-list, .actionSheetScroller { padding: 6px !important; }
+.MuiMenuItem-root, .actionSheetMenuItem, .listItem-button {
+  border-radius: 12px !important; min-height: 44px !important;
+  font-weight: 500 !important;
+  color: var(--lg-label);
+  transition: background-color .15s !important;
+}
+.MuiMenuItem-root:hover, .actionSheetMenuItem:hover, .MuiMenuItem-root.Mui-focusVisible { background: var(--lg-hover) !important; }
+.MuiDivider-root, .actionsheetDivider { border-color: var(--lg-separator) !important; background: var(--lg-separator) !important; }
+.MuiListItemIcon-root { color: var(--lg-label-2) !important; }
+.MuiBackdrop-root:not(.MuiBackdrop-invisible) { background: var(--lg-modal-scrim) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.actionSheetMenuItem .actionSheetItemText, .actionSheetTitle, .formDialogHeaderTitle { color: var(--lg-label); }
+
+.formDialogHeader:not(.formDialogHeader-clear), .formDialogFooter:not(.formDialogFooter-clear), .collapseContent { background-color: transparent !important; }
+.dialog.dialog-fullscreen, .dialog.dialog-fullscreen-lowres { border-radius: 0 !important; background: var(--lg-bg) !important; color: var(--lg-label); }
+.toast { border-radius: 16px !important; font-weight: 600; }
+
+.listItem {
+  border-radius: 0 !important;
+  border-bottom: 0.5px solid var(--lg-separator) !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--lg-label);
+}
+.listItem:last-child { border-bottom-color: transparent !important; }
+@media (hover: hover) { .listItem:hover { background: var(--lg-hover) !important; } }
+.listItem .listItemImage { border-radius: 8px !important; box-shadow: none !important; }
+.listItem .secondary, .listItemBodyText.secondary { color: var(--lg-label-2) !important; }
+.paperList { background: var(--lg-bg-2) !important; border-radius: var(--lg-r) !important; }
+
+.emby-input, .emby-select, .emby-textarea, .emby-select-withcolor, .searchfields-txtSearch {
+  background: var(--lg-fill-2) !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  color: var(--lg-label) !important;
+  min-height: 44px;
+}
+.emby-select option { background: var(--lg-bg-2); color: var(--lg-label); }
+.emby-input:focus, .emby-select:focus, .emby-textarea:focus {
+  border-color: var(--lg-blue) !important;
+  box-shadow: 0 0 0 4px rgba(10,132,255,.28);
+}
+.inputLabel, .selectLabel, .textareaLabel, .fieldDescription, .checkboxLabel { color: var(--lg-label-2); }
+.MuiFilledInput-root { border-radius: 12px !important; background: var(--lg-fill-2) !important; }
+.MuiFilledInput-root::before, .MuiFilledInput-root::after { display: none !important; }
+.inputLabelFocused, .selectLabelFocused, .textareaLabelFocused { color: var(--lg-blue) !important; }
+.emby-checkbox:checked + span + .checkboxOutline, .emby-checkbox:checked + .checkboxOutline { background-color: var(--lg-blue) !important; border-color: var(--lg-blue) !important; }
+.MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track { background-color: var(--lg-green) !important; opacity: 1 !important; }
+
+.searchFields .inputContainer, .searchFields { max-width: 720px; margin-left: auto !important; margin-right: auto !important; }
+.searchfields-txtSearch { height: 52px; font-size: 17px !important; border-radius: 16px !important; padding-left: 16px !important; }
+
+/* ------------------------------------------------------------------ */
+/* 12. Login                                                           */
+/* ------------------------------------------------------------------ */
+#loginPage, .loginPage {
+  background:
+    radial-gradient(60% 50% at 18% 20%, rgba(94,92,230,.35), transparent 70%),
+    radial-gradient(55% 45% at 85% 85%, rgba(10,132,255,.3), transparent 70%),
+    var(--lg-bg) !important;
+}
+.manualLoginForm, .loginPage .readOnlyContent { max-width: 400px; margin-left: auto !important; margin-right: auto !important; }
+.manualLoginForm {
+  padding: 28px 24px 18px !important;
+  border-radius: var(--lg-r-xl);
+  background: var(--lg-glass-tint);
+  -webkit-backdrop-filter: var(--lg-glass-blur); backdrop-filter: var(--lg-glass-blur);
+  box-shadow: var(--lg-glass-rim), var(--lg-glass-lift);
+}
+.loginPage .sectionTitle { text-align: center; font-size: 28px !important; }
+
+/* ------------------------------------------------------------------ */
+/* 13. Now playing bar                                                 */
+/* ------------------------------------------------------------------ */
+.nowPlayingBar {
+  left: calc(var(--lg-rail-space) + 12px) !important; right: 12px !important; bottom: 12px !important;
+  width: auto !important;
+  border-radius: 22px !important;
+  overflow: hidden;
+  background-color: var(--lg-glass-base) !important;
+  color: var(--lg-label) !important;
+}
+@media (max-width: 759px) { .nowPlayingBar { left: 12px !important; bottom: 88px !important; } }
+.nowPlayingBarPositionContainer .mdl-slider-background-lower, .sliderBubble { background: var(--lg-label) !important; }
+.sliderBubble { color: var(--lg-bg) !important; border-radius: 8px !important; }
+
+/* ------------------------------------------------------------------ */
+/* 14. Motion preferences                                              */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  .lg-hero-art, .lg-hero-slide.is-active .lg-hero-art { transform: none !important; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 15. Settings — inset grouped lists                                  */
+/* ------------------------------------------------------------------ */
+html.lg-light .readOnlyContent:has(.listItem-border) { color: var(--lg-label); }
+.verticalSection:has(> .listItem-border), .readOnlyContent .verticalSection:has(.listItem-border) {
+  background: var(--lg-bg-2);
+  border-radius: var(--lg-r);
+  padding: 4px 0 !important;
+  margin-bottom: 1.5em !important;
+}
+.verticalSection:has(> .listItem-border) > .sectionTitle { padding: 10px 16px 4px !important; font-size: 13px !important; text-transform: uppercase; letter-spacing: .04em; color: var(--lg-label-2) !important; }
+.verticalSection:has(> .listItem-border) .listItem-border { display: block; margin: 0 !important; padding: 0 8px !important; border-bottom: 0.5px solid var(--lg-separator) !important; color: var(--lg-label) !important; }
+.verticalSection:has(> .listItem-border) .listItem-border:last-child { border-bottom: 0 !important; }
+.verticalSection:has(> .listItem-border) .listItem { border-bottom: 0 !important; }
+.verticalSection:has(> .listItem-border) .listItemIcon { color: var(--lg-blue) !important; }
+.lg-appearance-row .listItemAside { margin-left: auto; padding-right: 8px; color: var(--lg-label-2); font-weight: 500; }
+
+/* ------------------------------------------------------------------ */
+/* 16. Activity indicator — Apple-style spokes replace Material rings  */
+/* ------------------------------------------------------------------ */
+:root { --lg-activity: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='1' transform='rotate(0 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.24' transform='rotate(45 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.28' transform='rotate(90 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.34' transform='rotate(135 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.42' transform='rotate(180 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.52' transform='rotate(225 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.66' transform='rotate(270 20 20)'/%3E%3Crect x='18.25' y='3' width='3.5' height='10.5' rx='1.75' fill='white' opacity='0.82' transform='rotate(315 20 20)'/%3E%3C/svg%3E"); }
+@keyframes lg-activity { to { transform: rotate(360deg); } }
+
+.mdlSpinnerActive { animation: none !important; }
+.mdl-spinner > .mdl-spinner__layer { display: none !important; }
+.mdl-spinner::before {
+  content: ""; display: block; width: 100%; height: 100%;
+  background: var(--lg-activity) center / contain no-repeat;
+  animation: lg-activity .85s steps(8, end) infinite;
+  filter: var(--lg-activity-filter);
+}
+.docspinner { width: 44px !important; height: 44px !important; margin: -22px 0 0 -22px !important; }
+
+.MuiCircularProgress-root { position: relative; animation: none !important; }
+.MuiCircularProgress-root > svg { visibility: hidden; }
+.MuiCircularProgress-root::before {
+  content: ""; position: absolute; inset: 0;
+  background: var(--lg-activity) center / contain no-repeat;
+  animation: lg-activity .85s steps(8, end) infinite;
+  filter: var(--lg-activity-filter);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mdl-spinner::before, .MuiCircularProgress-root::before { animation-duration: 1.2s !important; }
+}
