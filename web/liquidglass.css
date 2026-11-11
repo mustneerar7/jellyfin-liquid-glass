@@ -1094,7 +1094,8 @@ html.lg-light .itemDetailPage.lg-cinematic .detailPageSecondaryContainer { margi
 :is(.nowPlayingBar, .nowPlayingPage) button.buttonActive .material-icons { color: #000 !important; }
 html.lg-light .nowPlayingBar button.buttonActive .material-icons { color: #fff !important; }
 
-/* 13c. Player bar: floating Liquid Glass capsule (desktop) / iOS mini player (phone) */
+/* 13c. Player bar: the same Liquid Glass as the floating sidebar (tint, top-lit gradient,
+   pointer highlight, rim, lift; more solid while you use it). On phones it matches the tab bar. */
 .nowPlayingBar {
   position: fixed !important;
   left: calc(var(--lg-rail-space) + 24px) !important; right: 24px !important;
@@ -1102,12 +1103,22 @@ html.lg-light .nowPlayingBar button.buttonActive .material-icons { color: #fff !
   width: auto !important; max-width: 1080px; margin: 0 auto;
   height: 68px !important;
   padding: 0 !important;
-  border-radius: 26px !important;
+  border-radius: var(--lg-r-xl) !important;
   overflow: hidden;
-  background-color: color-mix(in srgb, var(--lg-glass-base) 100%, var(--lg-bg) 18%) !important;
+  background-color: var(--lg-nav-bg) !important;
+  background-image:
+    radial-gradient(140% 60% at var(--lg-mx, 0%) var(--lg-my, 0%), var(--lg-glass-sheen), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01)) !important;
+  -webkit-backdrop-filter: var(--lg-glass-blur); backdrop-filter: var(--lg-glass-blur);
+  box-shadow: var(--lg-glass-rim), var(--lg-glass-lift) !important;
   color: var(--lg-label) !important;
   text-align: left !important;
   font-family: var(--lg-font);
+  transition: transform .2s ease-out, opacity .2s, background-color .3s !important;
+}
+.nowPlayingBar:hover, .nowPlayingBar:focus-within { background-color: var(--lg-nav-bg-open) !important; }
+@media (prefers-reduced-transparency: reduce) {
+  .nowPlayingBar { background: var(--lg-bg-2) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 .nowPlayingBar .nowPlayingBarTop {
   display: grid !important;
@@ -1170,6 +1181,7 @@ html.lg-np-open .nowPlayingBar { display: none !important; }
     bottom: calc(86px + env(safe-area-inset-bottom)) !important;
     height: 60px !important;
     border-radius: 999px !important;
+    background-color: var(--lg-nav-bg-open) !important;   /* same as the phone tab bar */
   }
   html.lg-nav-hidden .nowPlayingBar { bottom: calc(12px + env(safe-area-inset-bottom)) !important; }
   .nowPlayingBar .nowPlayingBarTop { grid-template-columns: minmax(0, 1fr) auto auto; padding: 0 8px 0 9px; column-gap: 0; }
@@ -1574,24 +1586,7 @@ html.layout-tv .nowPlayingPage button:focus .material-icons { color: var(--np-pl
 .lyricPage .lyricsLine:not(.futureLyric):not(.pastLyric) { opacity: 1; transform: scale(1.03); }
 
 /* 13g. Album / artist / playlist pages */
-.lg-music-wash { display: none; }
 .itemDetailPage.lg-music-page:not(.lg-cinematic) { position: relative; }
-.itemDetailPage.lg-music-page:not(.lg-cinematic) .lg-music-wash {
-  display: block;
-  position: absolute; z-index: 0; top: 0;
-  left: calc(-1 * var(--lg-rail-space)); right: 0;
-  height: min(78vh, 760px);
-  overflow: hidden; pointer-events: none;
-  -webkit-mask: linear-gradient(180deg, #000 0%, rgba(0,0,0,.6) 45%, transparent 100%);
-          mask: linear-gradient(180deg, #000 0%, rgba(0,0,0,.6) 45%, transparent 100%);
-}
-.itemDetailPage.lg-music-page:not(.lg-cinematic) .lg-music-wash::before {
-  content: ""; position: absolute; inset: -25%;
-  background: var(--lg-music-art, none) center / cover no-repeat;
-  filter: blur(90px) saturate(1.6);
-  opacity: .55;
-}
-html.lg-light .itemDetailPage.lg-music-page:not(.lg-cinematic) .lg-music-wash::before { opacity: .35; }
 .itemDetailPage.lg-music-page:not(.lg-cinematic) .detailPageWrapperContainer { position: relative; z-index: 1; }
 .itemDetailPage.lg-music-page:not(.lg-cinematic) .itemBackdrop { display: none !important; }
 

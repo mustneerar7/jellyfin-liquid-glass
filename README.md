@@ -14,12 +14,12 @@ An Apple TV–style redesign of the Jellyfin **web** client, built around Apple'
   - Local trailer files play first, then YouTube trailers from the metadata (ones named "trailer" or "teaser" are preferred).
   - Trailers pause when you scroll away or switch tabs, and are skipped with reduced motion or data saver on.
 - **Music (Apple Music on Apple TV / iOS):**
-  - **Player bar:** a floating Liquid Glass capsule with artwork, transport, volume and a hairline progress bar. On phones it becomes the iOS mini player above the tab bar.
+  - **Player bar:** a floating capsule made of the same Liquid Glass as the sidebar, with artwork, transport, volume and a hairline progress bar. On phones it becomes the iOS mini player above the tab bar, matching the tab bar.
   - **Now Playing:** full screen on a solid black (Dark) or white (Light) background, with artwork that settles back when paused.
     - On TVs and wide screens it uses the tvOS 10-foot layout: big artwork with the title beside it, a full-width scrubber, and one control row (Playing Next · transport · lyrics / shuffle / repeat / volume). "Playing Next" slides in as a glass sheet. Remote and keyboard focus uses tvOS-style white platters, and after a few seconds idle the controls fade away, leaving the artwork and title.
     - On phones it uses the iOS layout, with the queue below.
   - **Lyrics:** big bold lines on the same solid background.
-  - **Album, artist and playlist pages:** an artwork colour wash, the artist in Apple Music red, Play and Shuffle buttons, and a clean numbered track list with animated level bars on the song that's playing. On phones the album header is centred, as in iOS Music.
+  - **Album, artist and playlist pages:** the artist in Apple Music red, Play and Shuffle buttons, and a clean numbered track list with animated level bars on the song that's playing. On phones the album header is centred, as in iOS Music.
   - SF Symbols–style icons replace the Material icons in the player. Favorites use a star. Artists are round, with a silhouette when there's no photo.
 - **Liquid Glass material:**
   - Translucent, blurred surfaces with light-catching rims and a specular highlight that follows the pointer.

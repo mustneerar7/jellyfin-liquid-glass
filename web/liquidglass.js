@@ -839,17 +839,8 @@
     page.classList.toggle('lg-music-page', music);
     if (!music) { delete page.dataset.lgMusic; return; }
     page.dataset.lgMusic = it.Type;
-    let art = '';
-    if (it.ImageTags && it.ImageTags.Primary) art = imgUrl(it.Id, 'Primary', { maxWidth: 600, tag: it.ImageTags.Primary });
-    else if (it.AlbumId && it.AlbumPrimaryImageTag) art = imgUrl(it.AlbumId, 'Primary', { maxWidth: 600, tag: it.AlbumPrimaryImageTag });
-    page.classList.toggle('lg-music-noart', !art);
-    if (art) page.style.setProperty('--lg-music-art', `url("${art}")`); else page.style.removeProperty('--lg-music-art');
-    if (!$(':scope > .lg-music-wash', page)) {
-      const wash = doc.createElement('div');
-      wash.className = 'lg-music-wash';
-      wash.setAttribute('aria-hidden', 'true');
-      page.insertBefore(wash, page.firstChild);
-    }
+    const hasArt = !!((it.ImageTags && it.ImageTags.Primary) || (it.AlbumId && it.AlbumPrimaryImageTag));
+    page.classList.toggle('lg-music-noart', !hasArt);
   }
 
   function playerPaused(npPage) {
@@ -958,7 +949,7 @@
   ['pointermove', 'pointerdown', 'wheel', 'touchstart'].forEach((t) => doc.addEventListener(t, npWake, { passive: true, capture: true }));
 
   /* ---------------- Specular light that follows the pointer ---------------- */
-  const LIGHT_SEL = '.lg-glass, .lg-btn, .lg-nav-panel, .lg-nav-item, .detailButton, .MuiMenu-paper';
+  const LIGHT_SEL = '.lg-glass, .lg-btn, .lg-nav-panel, .lg-nav-item, .nowPlayingBar, .detailButton, .MuiMenu-paper';
   let lightFrame = 0, lightEvt = null;
   doc.addEventListener('pointermove', (e) => {
     lightEvt = e;
