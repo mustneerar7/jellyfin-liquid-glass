@@ -907,7 +907,7 @@
     const npPage = $('.nowPlayingPage:not(.hide)');
     const lyrPage = $('.lyricPage:not(.hide)');
     const open = (r === 'queue' && !!npPage) || (r === 'lyrics' && !!lyrPage);
-    root.classList.toggle('lg-np-open', open);
+    if (open !== root.classList.contains('lg-np-open')) { root.classList.toggle('lg-np-open', open); npWake(); }
     const paused = playerPaused(r === 'queue' ? npPage : null);
     root.classList.toggle('lg-paused', paused);
     if (open) ensureArtBackground(r === 'queue' ? npPage : lyrPage);
@@ -923,6 +923,17 @@
       });
       const head = $('.playlistSectionButton', npPage);
       if (head && !$('.lg-np-queue-title', head)) head.insertAdjacentHTML('afterbegin', '<h2 class="lg-np-queue-title">Playing Next</h2>');
+      // TV layout: "Playing Next" button that slides the queue sheet in (hidden by CSS elsewhere)
+      const controls = $('.nowPlayingButtonsContainer', npPage);
+      if (controls && !$('.lg-np-queue-btn', controls)) {
+        const qb = doc.createElement('button');
+        qb.type = 'button';
+        qb.className = 'lg-np-queue-btn';
+        qb.setAttribute('aria-expanded', 'false');
+        qb.innerHTML = `${icon('list')}<span>Playing Next</span>`;
+        qb.addEventListener('click', () => toggleQueue(npPage));
+        controls.appendChild(qb);
+      }
     }
     const music = r === 'music' || !!$('.itemDetailPage.lg-music-page:not(.hide)');
     root.classList.toggle('lg-route-music', music);
@@ -930,6 +941,41 @@
     trackNowPlaying(barOn || open);
     markPlaying();
   }
+
+  // Now Playing (TV layout): the queue sheet and the idle fade.
+  function toggleQueue(page, force) {
+    const open = page.classList.toggle('lg-np-queue-open', force);
+    const qb = $('.lg-np-queue-btn', page);
+    if (qb) qb.setAttribute('aria-expanded', String(open));
+    if (open) { const first = $('.nowPlayingPlaylist .listItem', page); if (first) first.scrollIntoView({ block: 'nearest' }); }
+    npWake();
+  }
+  doc.addEventListener('keydown', (e) => {
+    const page = $('.nowPlayingPage.lg-np-queue-open:not(.hide)');
+    if (page && e.key === 'Escape') { e.preventDefault(); toggleQueue(page, false); const qb = $('.lg-np-queue-btn', page); if (qb) qb.focus(); }
+  });
+  doc.addEventListener('pointerdown', (e) => {
+    const page = $('.nowPlayingPage.lg-np-queue-open:not(.hide)');
+    if (page && !e.target.closest('.playlistSection, .lg-np-queue-btn, .actionSheet, .dialogContainer, .MuiPopover-root')) toggleQueue(page, false);
+  }, true);
+
+  const NP_IDLE_MS = 6000;
+  let npIdleTimer = 0;
+  function npWake() {
+    root.classList.remove('lg-np-idle');
+    clearTimeout(npIdleTimer);
+    if (!root.classList.contains('lg-np-open') || routeName() !== 'queue') return;
+    npIdleTimer = setTimeout(() => {
+      const page = $('.nowPlayingPage:not(.hide)');
+      if (page && routeName() === 'queue' && !page.classList.contains('lg-np-queue-open') && !page.contains(doc.activeElement && doc.activeElement.closest('.sliderContainer'))) root.classList.add('lg-np-idle');
+    }, NP_IDLE_MS);
+  }
+  // Like Apple TV, the first remote/arrow press while idle only brings the controls back.
+  doc.addEventListener('keydown', (e) => {
+    if (root.classList.contains('lg-np-idle') && /^(Arrow|Enter$| $)/.test(e.key)) { e.preventDefault(); e.stopPropagation(); }
+    npWake();
+  }, true);
+  ['pointermove', 'pointerdown', 'wheel', 'touchstart'].forEach((t) => doc.addEventListener(t, npWake, { passive: true, capture: true }));
 
   /* ---------------- Specular light that follows the pointer ---------------- */
   const LIGHT_SEL = '.lg-glass, .lg-btn, .lg-nav-panel, .lg-nav-item, .detailButton, .MuiMenu-paper';

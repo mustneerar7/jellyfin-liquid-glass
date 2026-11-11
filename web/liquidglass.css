@@ -1440,6 +1440,130 @@ html.lg-np-open body, html.lg-np-open { background: #000 !important; }
   .nowPlayingPage .nowPlayingPlaylist .listViewUserDataButtons .listItemButton:not([data-action="menu"]) { display: none; }
 }
 
+/* 13e-tv. Now Playing on TVs and wide screens: the tvOS 10-foot layout.
+   Big artwork bottom-left with the title beside it, a full-width scrubber, one control row
+   (Playing Next · transport · extras), the queue as a slide-in glass sheet, tvOS focus platters
+   for remotes/keyboards, and controls that fade away when idle (html.lg-np-idle, set by the script).
+   Sizes are in vh so the screen scales from a laptop to a 4K TV. */
+.lg-np-queue-btn { display: none; }
+@media (min-width: 900px) and (min-aspect-ratio: 4/3) {
+  .nowPlayingPage {
+    --np-art: min(54vh, 40vw);
+    --np-pad-x: max(5vw, 48px);
+    --np-pad-y: max(6vh, 36px);
+    --np-btn: max(5.6vh, 44px);
+  }
+  .nowPlayingPage .remoteControlContent { display: block !important; height: 100vh !important; min-height: 0; padding: 0 !important; overflow: hidden; }
+  .nowPlayingPage .nowPlayingInfoContainer {
+    display: grid !important;
+    grid-template-columns: var(--np-art) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    column-gap: max(3.5vw, 32px);
+    align-items: end;
+    box-sizing: border-box;
+    width: 100% !important; height: 100vh !important;
+    padding: calc(var(--np-pad-y) + 4vh) var(--np-pad-x) var(--np-pad-y);
+  }
+  /* Flatten Jellyfin's wrappers so title, scrubber and button groups sit on one grid */
+  .nowPlayingPage :is(.nowPlayingInfoControls, .nowPlayingButtonsContainer) { display: contents !important; }
+
+  .nowPlayingPage .nowPlayingPageImageContainer { grid-area: 1 / 1; align-self: end; margin: 0 !important; }
+  .nowPlayingPage .nowPlayingPageImage { border-radius: max(1.4vh, 12px); }
+  .nowPlayingPage .infoContainer {
+    grid-area: 1 / 2; align-self: end; min-width: 0;
+    flex-direction: column; align-items: flex-start !important; gap: 2vh;
+    padding-bottom: .4vh;
+  }
+  .nowPlayingPage .nowPlayingInfoContainerMedia { flex: none; width: 100% !important; }
+  .nowPlayingPage .nowPlayingSongName {
+    font-size: clamp(28px, 5vh, 72px); font-weight: 800; letter-spacing: -0.025em; line-height: 1.06;
+    white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    margin-bottom: .8vh;
+  }
+  .nowPlayingPage :is(.nowPlayingArtist, .nowPlayingAlbum) { font-size: clamp(18px, 3vh, 42px); line-height: 1.25; }
+  .nowPlayingPage .nowPlayingPageUserDataButtonsTitle button { width: var(--np-btn); height: var(--np-btn); font-size: max(2.7vh, 20px); }
+
+  .nowPlayingPage .nowPlayingInfoControls > .sliderContainer { grid-area: 2 / 1 / 3 / -1; margin: 5vh 0 .5vh; row-gap: 1vh; }
+  .nowPlayingPage .nowPlayingPositionSliderContainer { height: max(2.4vh, 18px); }
+  .nowPlayingPage .nowPlayingPositionSliderContainer .mdl-slider-background-flex { height: max(.75vh, 6px); margin-top: calc(max(.75vh, 6px) / -2); }
+  .nowPlayingPage .nowPlayingPositionSliderContainer:is(:hover, :focus-within) .mdl-slider-background-flex { height: max(1.3vh, 10px); margin-top: calc(max(1.3vh, 10px) / -2); }
+  .nowPlayingPage :is(.positionTime, .runtime) { font-size: max(1.6vh, 12px); }
+
+  /* One control row: Playing Next (left) · transport (centre) · extras + volume (right) */
+  .nowPlayingPage :is(.nowPlayingInfoButtons, .nowPlayingSecondaryButtons, .lg-np-queue-btn) {
+    grid-area: 3 / 1 / 4 / -1;
+    transition: opacity .6s var(--lg-ease), transform .6s var(--lg-ease);
+  }
+  .nowPlayingPage .nowPlayingInfoButtons { justify-self: center; gap: max(3.5vw, 28px); }
+  .nowPlayingPage .nowPlayingInfoButtons > button { width: max(8.5vh, 64px); height: max(8.5vh, 64px); font-size: max(4.6vh, 34px) !important; }
+  .nowPlayingPage .nowPlayingInfoButtons > .btnPlayPause { width: max(11vh, 84px); height: max(11vh, 84px); font-size: max(7vh, 52px) !important; }
+  .nowPlayingPage .nowPlayingSecondaryButtons {
+    justify-self: end; flex-wrap: nowrap !important; justify-content: flex-end !important;
+    gap: max(.8vw, 8px); row-gap: 0;
+  }
+  .nowPlayingPage .nowPlayingSecondaryButtons > button { width: var(--np-btn); height: var(--np-btn); font-size: max(2.8vh, 21px) !important; border-radius: 50% !important; }
+  .nowPlayingPage .nowPlayingSecondaryButtons .volumecontrol { order: 10; flex: none; width: max(14vw, 170px); margin-left: max(1vw, 8px); }
+  .lg-np-queue-btn {
+    display: inline-flex; align-items: center; gap: max(.7vw, 8px);
+    justify-self: start;
+    height: var(--np-btn); padding: 0 max(1.5vw, 18px) 0 max(1.2vw, 14px);
+    border: 0; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,.14); color: #fff;
+    font: 600 max(1.9vh, 15px)/1 var(--lg-font); letter-spacing: -0.01em;
+    transition: background-color .2s, transform .35s var(--lg-spring), opacity .6s var(--lg-ease);
+  }
+  .lg-np-queue-btn svg { width: max(2.6vh, 20px); height: max(2.6vh, 20px); }
+  .lg-np-queue-btn:hover { background: rgba(255,255,255,.24); }
+  .nowPlayingPage.lg-np-queue-open .lg-np-queue-btn { background: #fff; color: #000; }
+
+  /* Playing Next: a glass sheet that slides in from the right */
+  .nowPlayingPage .playlistSection {
+    position: fixed !important; z-index: 5;
+    top: 2.5vh; bottom: 2.5vh; right: max(1.6vw, 16px);
+    width: min(560px, 34vw); max-height: none !important;
+    border-radius: max(3vh, 24px);
+    background: rgba(28,28,30,.7);
+    -webkit-backdrop-filter: blur(40px) saturate(170%); backdrop-filter: blur(40px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 .5px rgba(255,255,255,.1), 0 30px 80px -20px rgba(0,0,0,.6);
+    transform: translateX(calc(100% + 4vw)); opacity: 0; visibility: hidden;
+    transition: transform .55s var(--lg-spring), opacity .3s var(--lg-ease), visibility 0s .55s;
+  }
+  .nowPlayingPage.lg-np-queue-open .playlistSection { transform: none; opacity: 1; visibility: visible; transition: transform .55s var(--lg-spring), opacity .3s var(--lg-ease); }
+  .nowPlayingPage .infoContainer, .nowPlayingPage .nowPlayingPageImageContainer { transition: opacity .5s var(--lg-ease); }
+  .nowPlayingPage.lg-np-queue-open .infoContainer { opacity: .25; }
+  .nowPlayingPage.lg-np-queue-open .nowPlayingSecondaryButtons { opacity: 0; pointer-events: none; }
+  .nowPlayingPage .nowPlayingPlaylist .listItem:not(:hover):not(:focus-within) :is(.listViewDragHandle, .listItemButton:not([data-action="menu"])) { display: none; }
+  .nowPlayingPage .playlistSectionButton { padding: 3vh 1.4vw 1.2vh 2vw !important; }
+  .lg-np-queue-title { font-size: max(3vh, 20px) !important; }
+  .nowPlayingPage .nowPlayingPlaylist { padding: 0 1vw 2vh !important; }
+  .nowPlayingPage .nowPlayingPlaylist .listItem { min-height: max(7.6vh, 56px); gap: max(.9vw, 12px); }
+  .nowPlayingPage .nowPlayingPlaylist .listItemImage { width: max(5.8vh, 44px) !important; height: max(5.8vh, 44px) !important; min-width: max(5.8vh, 44px); }
+  .nowPlayingPage .nowPlayingPlaylist .listItemBodyText { font-size: max(2.1vh, 15px); }
+  .nowPlayingPage .nowPlayingPlaylist .listItemMediaInfo { font-size: max(1.7vh, 13px); }
+
+  html.lg-np-open .lg-back { top: var(--np-pad-y, 4vh); left: max(5vw, 48px); width: max(5.6vh, 44px); height: max(5.6vh, 44px); transition: opacity .6s var(--lg-ease), transform .35s var(--lg-spring); }
+  html.lg-np-open .lg-back svg { width: max(2.8vh, 22px); height: max(2.8vh, 22px); }
+
+  /* Idle: the controls fade away, leaving the artwork and title (as on Apple TV) */
+  html.lg-np-idle .nowPlayingPage :is(.nowPlayingInfoButtons, .nowPlayingSecondaryButtons, .lg-np-queue-btn),
+  html.lg-np-idle .lg-back { opacity: 0 !important; transform: translateY(1.2vh); pointer-events: none; }
+  html.lg-np-idle .nowPlayingPage .nowPlayingInfoControls > .sliderContainer { opacity: .7; }
+  html.lg-np-idle, html.lg-np-idle * { cursor: none !important; }
+}
+
+/* tvOS focus: a white platter that lifts the focused control (remote / keyboard navigation) */
+.nowPlayingPage button:focus-visible,
+html.layout-tv .nowPlayingPage button:focus,
+html.lg-np-open .lg-back:focus-visible {
+  outline: none !important;
+  background: #fff !important; color: #000 !important;
+  transform: scale(1.12);
+  box-shadow: 0 14px 34px -10px rgba(0,0,0,.55) !important;
+}
+.nowPlayingPage button:focus-visible .material-icons,
+html.layout-tv .nowPlayingPage button:focus .material-icons { color: #000 !important; }
+.nowPlayingPage .nowPlayingPlaylist .listItem:focus-within { background: rgba(255,255,255,.18) !important; }
+
 /* 13f. Lyrics: Apple Music's big bold lines over the artwork wash */
 .lyricPage { color: #fff !important; font-family: var(--lg-font); }
 .lyricPage .lyricsContainer, .lyricPage > :not(.lg-np-bg) { position: relative; z-index: 1; }
