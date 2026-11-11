@@ -827,7 +827,7 @@
 
   /* ---------------- Music: Apple Music–style player, Now Playing, album pages ----------------
      Mostly CSS over Jellyfin's own player markup, so every control keeps working. The script adds
-     state classes, the artwork background, the "Playing Next" title and the playing-track marker. */
+     state classes, the "Playing Next" title and button, the idle fade and the playing-track marker. */
   const isMusicItem = (it) => !!it && (['MusicAlbum', 'MusicArtist', 'Audio', 'MusicGenre'].includes(it.Type)
     || (it.Type === 'Playlist' && it.MediaType === 'Audio'));
   const mediaMeta = () => { try { return navigator.mediaSession && navigator.mediaSession.metadata; } catch (e) { return null; } };
@@ -855,25 +855,6 @@
   function playerPaused(npPage) {
     const ic = (npPage && $('.btnPlayPause .material-icons', npPage)) || $('.nowPlayingBar .nowPlayingBarCenter .playPauseButton .material-icons');
     return !!ic && /\bplay_/.test(ic.className);
-  }
-
-  // Blurred, drifting artwork behind Now Playing and Lyrics.
-  function ensureArtBackground(page) {
-    let bg = $(':scope > .lg-np-bg', page);
-    if (!bg) {
-      bg = doc.createElement('div');
-      bg.className = 'lg-np-bg';
-      bg.setAttribute('aria-hidden', 'true');
-      bg.innerHTML = '<i></i><i></i>';
-      page.insertBefore(bg, page.firstChild);
-    }
-    const img = $('.nowPlayingPageImage', page);
-    let src = img && !img.classList.contains('hide') ? (img.getAttribute('src') || '') : '';
-    if (!src) { const m = mediaMeta(); const a = (m && m.artwork) || []; if (a.length) src = a[a.length - 1].src || ''; }
-    if ((bg.dataset.src || '') !== src) {
-      bg.dataset.src = src;
-      bg.style.setProperty('--lg-np-art', src ? `url("${src.replace(/"/g, '%22')}")` : 'none');
-    }
   }
 
   // Which item is playing: ask the server for this device's session when the song changes.
@@ -910,7 +891,6 @@
     if (open !== root.classList.contains('lg-np-open')) { root.classList.toggle('lg-np-open', open); npWake(); }
     const paused = playerPaused(r === 'queue' ? npPage : null);
     root.classList.toggle('lg-paused', paused);
-    if (open) ensureArtBackground(r === 'queue' ? npPage : lyrPage);
     if (npPage) {
       npPage.classList.toggle('lg-np-paused', paused);
       // Phone layout uses the shuffle/repeat beside the transport and hides the bottom-row pair;
