@@ -4,12 +4,15 @@ An Apple TV–style redesign of the Jellyfin **web** client, built around Apple'
 
 ## What it changes
 
-- **Navigation:** a floating glass sidebar replaces the top bar. It's an icon rail that expands on hover. On phone-sized screens it becomes an iOS-style floating tab bar at the bottom.
+- **Navigation:** a floating glass sidebar replaces the top bar. It's an icon rail that expands on hover. On phone-sized screens it becomes an iOS-style floating tab bar at the bottom, with your profile at the top-left and a ☰ menu at the top-right for Dashboard, Settings and Appearance.
 - **Home:** a full-bleed featured banner ("Top Shelf") of your shows and movies.
   - Shows you're partway through come first.
   - Each slide has a logo, metadata, **Play / Resume** (jumps straight to your next episode), More Info, and Favorite.
   - Slides auto-advance with a progress indicator. Swipe, the arrow keys, and the hover arrows also work.
 - **Show / movie pages:** a cinematic layout with full-screen backdrop art, the title logo, a prominent Play button, and round glass action buttons. Cast & crew appear as circular portraits.
+  - If the item has trailers, they fade in **muted** behind the header after a few seconds and loop, with a glass mute/unmute button.
+  - Local trailer files play first, then YouTube trailers from the metadata (ones named "trailer" or "teaser" are preferred).
+  - Trailers pause when you scroll away or switch tabs, and are skipped with reduced motion or data saver on.
 - **Liquid Glass material:**
   - Translucent, blurred surfaces with light-catching rims and a specular highlight that follows the pointer.
   - Covers the sidebar, buttons, menus, dialogs, toasts, the alphabet picker, and the now-playing bar.
@@ -77,6 +80,7 @@ The home banner and the top of show pages stay dark in light mode on purpose ("d
 
 ## Notes
 
+- Trailers from YouTube are embedded with `youtube-nocookie.com` and the YouTube IFrame API script, so show pages with trailers contact YouTube.
 - The Inter font is loaded from Google Fonts as a stand-in for SF Pro. Remove the `@import` line at the top of the CSS to keep everything local.
 - The theme relies on Jellyfin's class names. A future Jellyfin release may move things around. If something breaks after an upgrade, please open an issue with a screenshot.
 - Not affiliated with or endorsed by Apple or the Jellyfin project. "Apple TV" and "Liquid Glass" are used descriptively.

@@ -58,6 +58,10 @@
     moon: '<path d="M20 14.6A8.2 8.2 0 0 1 9.4 4 8.2 8.2 0 1 0 20 14.6z"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
     auto: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>',
+    muted: '<path d="M3.5 9.5H7l4.5-4v13L7 14.5H3.5z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    sound: '<path d="M3.5 9.5H7l4.5-4v13L7 14.5H3.5z"/><path d="M15 9a4.2 4.2 0 0 1 0 6M17.8 6.3a8 8 0 0 1 0 11.4"/>',
   };
   const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || P.folder}</svg>`;
   const libIcon = (type) => ({
@@ -170,11 +174,64 @@
       back.hidden = true;
       back.addEventListener('click', () => history.back());
       doc.body.appendChild(back);
+      buildPhoneTopBar();
+      applyAppearance(false);
     }
     root.classList.add('lg-nav-on');
     loadLibraries(nav);
     loadUser(nav);
     return nav;
+  }
+
+  // Phone layout: profile top-left, hamburger top-right with Dashboard / Settings / Appearance
+  // (these leave the bottom tab bar). Hidden on wider screens by CSS.
+  function buildPhoneTopBar() {
+    const prof = doc.createElement('a');
+    prof.className = 'lg-mtop lg-mprofile lg-glass';
+    prof.href = '#/mypreferencesmenu';
+    prof.setAttribute('aria-label', 'Profile');
+    prof.innerHTML = '<span class="lg-avatar" aria-hidden="true"></span>';
+    doc.body.appendChild(prof);
+
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lg-mtop lg-mmenu-btn lg-glass';
+    btn.setAttribute('aria-label', 'Menu');
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', 'lg-mmenu');
+    btn.innerHTML = icon('menu');
+    doc.body.appendChild(btn);
+
+    const menu = doc.createElement('div');
+    menu.id = 'lg-mmenu';
+    menu.className = 'lg-mmenu lg-glass';
+    menu.setAttribute('role', 'menu');
+    menu.hidden = true;
+    menu.innerHTML = `
+      <a role="menuitem" class="lg-mmenu-item" href="#/mypreferencesmenu" data-key="settings">${icon('settings')}<span>Settings</span></a>
+      <button type="button" role="menuitem" class="lg-mmenu-item lg-nav-appearance" data-key="appearance">${icon('moon')}<span>Appearance</span><span class="lg-nav-value"></span></button>`;
+    doc.body.appendChild(menu);
+
+    const setOpen = (open) => {
+      if (open === !menu.hidden) return;
+      menu.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.innerHTML = icon(open ? 'close' : 'menu');
+      if (open) { const first = $('.lg-mmenu-item', menu); if (first) first.focus({ preventScroll: true }); }
+    };
+    btn.addEventListener('click', () => setOpen(menu.hidden));
+    // Appearance cycles in place so you can see the change; links close the menu.
+    menu.addEventListener('click', (e) => {
+      const item = e.target.closest('.lg-mmenu-item');
+      if (!item) return;
+      if (item.classList.contains('lg-nav-appearance')) cycleAppearance();
+      else setOpen(false);
+    });
+    doc.addEventListener('pointerdown', (e) => { if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) setOpen(false); }, true);
+    doc.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+    window.addEventListener('hashchange', () => setOpen(false));
+    matchMedia('(min-width: 760px)').addEventListener('change', () => setOpen(false));
   }
 
   function loadLibraries(nav) {
@@ -205,16 +262,23 @@
     api().getUser(id).then((u) => {
       userCache = u;
       $('.lg-nav-name', nav).textContent = u.Name;
-      const av = $('.lg-avatar', nav);
-      if (u.PrimaryImageTag) {
-        av.style.backgroundImage = `url("${api().getUrl(`Users/${u.Id}/Images/Primary`, { tag: u.PrimaryImageTag, maxWidth: 96, quality: 90 })}")`;
-        av.textContent = '';
-      } else {
-        av.textContent = (u.Name || '?').trim().charAt(0).toUpperCase();
-      }
+      $$('.lg-avatar').forEach((av) => {
+        if (u.PrimaryImageTag) {
+          av.style.backgroundImage = `url("${api().getUrl(`Users/${u.Id}/Images/Primary`, { tag: u.PrimaryImageTag, maxWidth: 96, quality: 90 })}")`;
+          av.textContent = '';
+        } else {
+          av.textContent = (u.Name || '?').trim().charAt(0).toUpperCase();
+        }
+      });
+      const prof = $('.lg-mprofile');
+      if (prof) prof.setAttribute('aria-label', `Profile: ${u.Name}`);
       const sys = $('.lg-nav-sys', nav);
       if (u.Policy && u.Policy.IsAdministrator && !$('[data-key="dashboard"]', sys)) {
         sys.insertAdjacentHTML('beforeend', `<a class="lg-nav-item" href="#/dashboard" data-key="dashboard">${icon('server')}<span class="lg-nav-label">Dashboard</span></a>`);
+      }
+      const menu = $('.lg-mmenu');
+      if (menu && u.Policy && u.Policy.IsAdministrator && !$('[data-key="dashboard"]', menu)) {
+        menu.insertAdjacentHTML('afterbegin', `<a role="menuitem" class="lg-mmenu-item" href="#/dashboard" data-key="dashboard">${icon('server')}<span>Dashboard</span></a>`);
       }
     }).catch((e) => log('user', e));
   }
@@ -470,12 +534,12 @@
   function ensureDetail() {
     const page = $('.itemDetailPage:not(.hide)');
     root.classList.toggle('lg-cinematic-page', !!(page && page.classList.contains('lg-cinematic') && routeName() === 'details'));
-    if (!page || routeName() !== 'details') return;
+    const id = page && routeName() === 'details' ? routeParams().get('id') : null;
+    if (trailer && (trailer.page !== page || trailer.id !== id)) stopTrailer();
+    if (!page || !id) return;
     measureDetail(page);
-    const id = routeParams().get('id');
-    if (!id) return;
     maybeAutoplay(page, id);
-    if (page.dataset.lgId === id) { ensureLogo(page); return; }
+    if (page.dataset.lgId === id) { ensureLogo(page); ensureTrailer(page, id); return; }
     page.dataset.lgId = id;
     page.classList.remove('lg-cinematic', 'lg-has-logo');
     getJSON(`Items/${id}`, { userId: uid() }).then((it) => {
@@ -489,15 +553,256 @@
       else if (it.ParentLogoItemId && it.ParentLogoImageTag) logo = imgUrl(it.ParentLogoItemId, 'Logo', { maxWidth: 960, tag: it.ParentLogoImageTag });
       page.dataset.lgType = it.Type || '';
       page.dataset.lgLogo = logo;
+      page._lgItem = it;
       let layer = $(':scope > .lg-detail-bg', page);
       if (!layer) { layer = doc.createElement('div'); layer.className = 'lg-detail-bg'; page.insertBefore(layer, page.firstChild); }
       layer.style.backgroundImage = bg ? `url("${bg}")` : '';
       page.classList.toggle('lg-cinematic', !!bg);
       root.classList.toggle('lg-cinematic-page', !!bg);
       ensureLogo(page);
+      ensureTrailer(page, id);
       requestAnimationFrame(() => measureDetail(page));
     }).catch((e) => log('detail', e));
   }
+
+  /* ---------------- Muted trailer behind the item header ----------------
+     Shows and movies: the backdrop appears first, then the trailer(s) fade in
+     muted and loop. Local trailer files play first, then YouTube trailers from
+     metadata. Pauses (and fades back to the backdrop) when scrolled away or the
+     tab is hidden; stops when leaving the page. */
+  const TRAILER_TYPES = ['Series', 'Movie'];
+  const TRAILER_MAX = 6;
+  let trailer = null;
+  let ytApi = null;
+
+  const ytId = (url) => {
+    const m = String(url || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([\w-]{11})/);
+    return m ? m[1] : null;
+  };
+
+  // Prefer things named trailer/teaser over clips and featurettes.
+  function pickRemoteTrailers(list) {
+    const rank = (n) => (/official trailer/i.test(n) ? 0 : /trailer/i.test(n) ? 1 : /teaser/i.test(n) ? 2 : !n ? 3 : 4);
+    const seen = new Set();
+    const all = (list || []).map((t, i) => ({ vid: ytId(t.Url), name: (t.Name || '').trim(), i }))
+      .filter((t) => t.vid && !seen.has(t.vid) && seen.add(t.vid));
+    const best = all.some((t) => rank(t.name) <= 2) ? all.filter((t) => rank(t.name) <= 2) : all;
+    return best.sort((a, b) => rank(a.name) - rank(b.name) || a.i - b.i).slice(0, TRAILER_MAX);
+  }
+
+  async function trailerSources(it) {
+    const out = [];
+    if (it.LocalTrailerCount > 0) {
+      const local = await getJSON(`Items/${it.Id}/LocalTrailers`, { userId: uid() })
+        .catch(() => getJSON(`Users/${uid()}/Items/${it.Id}/LocalTrailers`))
+        .catch(() => []);
+      (local || []).forEach((t) => out.push({ kind: 'local', id: t.Id }));
+    }
+    pickRemoteTrailers(it.RemoteTrailers).forEach((t) => out.push({ kind: 'yt', vid: t.vid }));
+    return out.slice(0, TRAILER_MAX);
+  }
+
+  function loadYouTube() {
+    if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+    if (ytApi) return ytApi;
+    ytApi = new Promise((resolve, reject) => {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => { if (typeof prev === 'function') { try { prev(); } catch (e) { /* ignore */ } } resolve(window.YT); };
+      const s = doc.createElement('script');
+      s.src = 'https://www.youtube.com/iframe_api';
+      s.async = true;
+      s.onerror = () => { ytApi = null; reject(new Error('YouTube API failed to load')); };
+      doc.head.appendChild(s);
+    });
+    return ytApi;
+  }
+
+  function ensureTrailer(page, id) {
+    if (trailer && trailer.page === page && trailer.id === id) { syncTrailer(); return; }
+    const it = page._lgItem;
+    if (it && it.Id === id && page.classList.contains('lg-cinematic')) startTrailer(page, it);
+  }
+
+  function startTrailer(page, it) {
+    stopTrailer();
+    // The object also marks "already checked" so items without trailers aren't re-fetched every tick.
+    const t = trailer = { page, id: it.Id, sources: [], idx: -1, fails: 0, muted: true, dead: false };
+    const saveData = navigator.connection && navigator.connection.saveData;
+    if (!TRAILER_TYPES.includes(it.Type) || reducedMotion.matches || saveData) return;
+    trailerSources(it).then((sources) => {
+      const bg = $(':scope > .lg-detail-bg', page);
+      if (t.dead || !sources.length || !bg) return;
+      t.sources = sources;
+      t.layer = doc.createElement('div');
+      t.layer.className = 'lg-trailer';
+      t.layer.setAttribute('aria-hidden', 'true');
+      bg.appendChild(t.layer);
+      t.btn = doc.createElement('button');
+      t.btn.type = 'button';
+      t.btn.className = 'lg-trailer-mute lg-glass';
+      t.btn.addEventListener('click', () => setTrailerMuted(t, !t.muted));
+      page.appendChild(t.btn);
+      setTrailerMuted(t, true);
+      t.watch = setInterval(() => watchTrailer(t), 400);
+      playNextTrailer(t);
+    }).catch((e) => log('trailer', e));
+  }
+
+  function stopTrailer() {
+    const t = trailer;
+    trailer = null;
+    if (!t) return;
+    t.dead = true;
+    clearMedia(t);
+    clearInterval(t.watch);
+    if (t.layer) t.layer.remove();
+    if (t.btn) t.btn.remove();
+    t.page.classList.remove('lg-trailer-on');
+  }
+
+  function clearMedia(t, keepYouTube) {
+    clearTimeout(t.revealTimer);
+    t.page.classList.remove('lg-trailer-on');
+    if (t.video) { t.video.removeAttribute('src'); t.video.load(); t.video.remove(); t.video = null; }
+    if (t.yt && !keepYouTube) { try { t.yt.destroy(); } catch (e) { /* ignore */ } t.yt = null; }
+    t.held = false;
+  }
+
+  function trailerFailed(t) {
+    if (t.dead) return;
+    if (++t.fails >= t.sources.length) { // nothing playable: keep the still backdrop
+      clearMedia(t);
+      clearInterval(t.watch);
+      if (t.btn) t.btn.remove();
+      t.sources = [];
+      return;
+    }
+    playNextTrailer(t);
+  }
+
+  function playNextTrailer(t) {
+    if (t.dead || !t.sources.length) return;
+    t.idx = (t.idx + 1) % t.sources.length;
+    const src = t.sources[t.idx];
+    clearMedia(t, src.kind === 'yt');
+    if (src.kind === 'local') {
+      const v = t.video = doc.createElement('video');
+      v.muted = t.muted;
+      v.playsInline = true;
+      v.preload = 'auto';
+      v.tabIndex = -1;
+      v.addEventListener('playing', () => { t.fails = 0; revealTrailer(t, 1200); });
+      v.addEventListener('ended', () => playNextTrailer(t));
+      v.addEventListener('error', () => trailerFailed(t));
+      v.src = api().getUrl(`Videos/${src.id}/stream`, { static: true, mediaSourceId: src.id, api_key: api().accessToken() });
+      t.layer.appendChild(v);
+      if (!trailerBlocked(t)) v.play().catch(() => { /* autoplay refused: stay on the backdrop */ });
+      return;
+    }
+    loadYouTube().then((YT) => {
+      if (t.dead || t.sources[t.idx] !== src) return;
+      if (t.yt && t.ytReady) {
+        if (trailerBlocked(t)) t.yt.cueVideoById(src.vid); else t.yt.loadVideoById(src.vid);
+        return;
+      }
+      const host = doc.createElement('div');
+      t.layer.appendChild(host);
+      t.ytReady = false;
+      t.yt = new YT.Player(host, {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: src.vid,
+        playerVars: {
+          autoplay: 1, mute: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3,
+          modestbranding: 1, playsinline: 1, rel: 0, cc_load_policy: 0, origin: location.origin,
+        },
+        events: {
+          onReady: (e) => {
+            if (t.dead) return;
+            t.ytReady = true;
+            const f = e.target.getIframe && e.target.getIframe();
+            if (f) { f.tabIndex = -1; f.title = ''; }
+            if (t.muted) e.target.mute(); else e.target.unMute();
+            // autoplay normally starts it; an extra playVideo() makes YouTube flash its pause icon
+            setTimeout(() => {
+              if (!t.dead && t.yt === e.target && !trailerBlocked(t) && ![1, 3].includes(e.target.getPlayerState())) e.target.playVideo();
+            }, 1000);
+          },
+          onStateChange: (e) => {
+            if (t.dead) return;
+            if (e.data === YT.PlayerState.PLAYING) { t.fails = 0; revealTrailer(t, 800); }
+            if (e.data === YT.PlayerState.ENDED) playNextTrailer(t);
+          },
+          onError: () => trailerFailed(t),
+        },
+      });
+    }).catch((e) => { log('trailer', e); clearMedia(t); });
+  }
+
+  const trailerPlaying = (t) => (t.video ? !t.video.paused && !t.video.ended
+    : !!(t.yt && t.ytReady && t.yt.getPlayerState && t.yt.getPlayerState() === 1));
+
+  // Stay on the backdrop for a moment after playback starts. YouTube shows a pause icon for
+  // ~3 s whenever playback starts or resumes, so wait until it has played past that.
+  const ytTime = (t) => { try { return !t.video && t.yt ? t.yt.getCurrentTime() : null; } catch (e) { return null; } };
+  function revealTrailer(t, delay) {
+    clearTimeout(t.revealTimer);
+    const start = ytTime(t);
+    const target = start == null ? 0 : Math.max(4, start + 4);
+    const check = () => {
+      if (t.dead || trailerBlocked(t) || !trailerPlaying(t)) return;
+      const pos = ytTime(t);
+      if (pos != null && pos < target) { t.revealTimer = setTimeout(check, 250); return; }
+      t.page.classList.add('lg-trailer-on');
+    };
+    t.revealTimer = setTimeout(check, delay);
+  }
+
+  // Fade back to the backdrop just before the end so YouTube's end screen never shows.
+  function watchTrailer(t) {
+    if (t.dead) return;
+    let left = Infinity;
+    try {
+      if (t.video && t.video.duration) left = t.video.duration - t.video.currentTime;
+      else if (t.yt && t.ytReady && t.yt.getDuration) left = t.yt.getDuration() - t.yt.getCurrentTime();
+    } catch (e) { /* ignore */ }
+    if (left < 1.4) { clearTimeout(t.revealTimer); t.page.classList.remove('lg-trailer-on'); }
+  }
+
+  function trailerBlocked(t) {
+    if (doc.hidden || !t.page.isConnected || t.page.classList.contains('hide')) return true;
+    const bg = t.layer && t.layer.parentElement;
+    return !!bg && window.scrollY > bg.offsetHeight * 0.6;
+  }
+
+  // Pause and fade out when scrolled away / tab hidden; pick back up when visible again.
+  function syncTrailer() {
+    const t = trailer;
+    if (!t || t.dead || !t.sources.length) return;
+    if (trailerBlocked(t)) {
+      if (t.held) return;
+      t.held = true;
+      clearTimeout(t.revealTimer);
+      t.page.classList.remove('lg-trailer-on');
+      try { if (t.video) t.video.pause(); else if (t.yt && t.ytReady) t.yt.pauseVideo(); } catch (e) { /* ignore */ }
+    } else if (t.held) {
+      t.held = false;
+      try { if (t.video) t.video.play().catch(() => {}); else if (t.yt && t.ytReady) t.yt.playVideo(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function setTrailerMuted(t, muted) {
+    t.muted = muted;
+    try {
+      if (t.video) t.video.muted = muted;
+      if (t.yt && t.ytReady) { if (muted) t.yt.mute(); else { t.yt.unMute(); if (t.yt.getVolume() < 10) t.yt.setVolume(60); } }
+    } catch (e) { /* ignore */ }
+    if (!t.btn) return;
+    t.btn.innerHTML = icon(muted ? 'muted' : 'sound');
+    t.btn.setAttribute('aria-label', muted ? 'Unmute trailer' : 'Mute trailer');
+    t.btn.title = muted ? 'Unmute' : 'Mute';
+    t.btn.setAttribute('aria-pressed', String(!muted));
+  }
+  doc.addEventListener('visibilitychange', syncTrailer);
 
   function ensureLogo(page) {
     const logo = page.dataset.lgLogo || '';
@@ -564,6 +869,7 @@
   window.addEventListener('scroll', () => {
     const s = window.scrollY > 8;
     if (s !== scrolled) { scrolled = s; root.classList.toggle('lg-scrolled', s); }
+    if (trailer) syncTrailer();
   }, { passive: true });
   schedule();
   log('loaded');

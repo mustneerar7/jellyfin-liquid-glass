@@ -411,6 +411,46 @@ html.lg-nav-hidden .lg-nav, html.lg-nav-hidden .lg-back { display: none !importa
 .lg-back:hover { transform: scale(1.08); }
 .lg-back[hidden] { display: none; }
 
+/* Phone top bar: profile (top-left, where Back sits on sub-pages) and a menu (top-right) */
+.lg-mtop, .lg-mmenu { display: none; box-sizing: border-box; }
+.lg-mtop {
+  position: fixed; z-index: 999; top: 12px;
+  width: 44px; height: 44px; padding: 0;
+  border-radius: 50%; border: 0;
+  place-items: center;
+  color: var(--lg-on-glass); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .35s var(--lg-spring), opacity .25s;
+}
+.lg-mtop:active { transform: scale(.92); }
+.lg-mtop svg { width: 22px; height: 22px; }
+.lg-mprofile { left: 12px; text-decoration: none !important; }
+.lg-mprofile .lg-avatar { width: 34px; height: 34px; flex-basis: 34px; font-size: 15px; }
+.lg-mmenu-btn { right: 12px; }
+.lg-mmenu {
+  position: fixed; z-index: 1001;
+  top: 64px; right: 12px;
+  min-width: 220px; max-width: calc(100vw - 24px);
+  padding: 6px;
+  border-radius: var(--lg-r-lg);
+  background-color: var(--lg-glass-base) !important;
+  flex-direction: column; gap: 2px;
+  transform-origin: top right;
+  animation: lg-menu-in .32s var(--lg-spring);
+}
+@keyframes lg-menu-in { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: none; } }
+.lg-mmenu-item {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; min-height: 48px; padding: 0 14px;
+  border: 0; border-radius: 14px; background: transparent;
+  color: var(--lg-label) !important; text-decoration: none !important;
+  font: 600 17px/1.2 var(--lg-font); letter-spacing: -0.01em; text-align: left;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.lg-mmenu-item svg { width: 22px; height: 22px; flex: 0 0 22px; color: var(--lg-label-2); }
+.lg-mmenu-item:hover, .lg-mmenu-item:focus-visible, .lg-mmenu-item:active { background: var(--lg-hover); }
+.lg-mmenu-item .lg-nav-value { margin-left: auto; padding-left: 12px; font-size: 15px; font-weight: 500; color: var(--lg-label-2); }
+
 @media (max-width: 759px) {
   .lg-nav {
     left: 12px; right: 12px; top: auto;
@@ -427,8 +467,8 @@ html.lg-nav-hidden .lg-nav, html.lg-nav-hidden .lg-back { display: none !importa
     border-radius: 999px;
   }
   .lg-nav-group, .lg-nav-scroll { flex-direction: row; overflow: visible; }
-  .lg-nav-sep, .lg-nav-spacer, .lg-nav-sys, .lg-nav-profile .lg-nav-label { display: none !important; }
-  .lg-nav-profile { order: 99; margin: 0; }
+  /* Profile, Settings, Appearance and Dashboard move to the top bar on phones */
+  .lg-nav-sep, .lg-nav-spacer, .lg-nav-sys, .lg-nav-profile { display: none !important; }
   .lg-nav-item {
     flex-direction: column; justify-content: center; gap: 2px;
     height: 54px; min-width: 58px; padding: 0 8px;
@@ -439,6 +479,12 @@ html.lg-nav-hidden .lg-nav, html.lg-nav-hidden .lg-back { display: none !importa
   .lg-nav-libs .lg-nav-item:nth-child(n+3) { display: none; }
   html.lg-nav-on:not(.lg-nav-hidden) .skinBody { padding-bottom: 96px; }
   .lg-back { top: 12px; left: 12px; }
+  html.lg-nav-on:not(.lg-nav-hidden) .lg-mtop { display: grid; }
+  html.lg-nav-on:not(.lg-nav-hidden) .lg-mmenu:not([hidden]) { display: flex; }
+  .lg-back:not([hidden]) ~ .lg-mprofile { display: none !important; }
+  /* Keep page content and library toolbars clear of the top bar (cinematic pages run under it) */
+  html.lg-nav-on:not(.lg-nav-hidden) main .mainAnimatedPage:not(.lg-cinematic)::before { content: ""; display: block; height: 56px; }
+  html.lg-nav-on:not(.lg-nav-hidden) header.MuiAppBar-root:not(.dashboard-appBar):not(.videoOsd-appBar):has(> .MuiToolbar-root ~ .MuiToolbar-root) { padding-top: 66px; }
 }
 
 /* ------------------------------------------------------------------ */
@@ -737,6 +783,39 @@ html.lg-has-hero .homePage { padding-top: 0 !important; }
 }
 @keyframes lg-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
+/* Muted trailer over the backdrop (shows/movies). Sits under the ::after scrim,
+   so the title and buttons stay readable. Sized to cover like the still art. */
+.lg-trailer {
+  position: absolute; inset: 0; overflow: hidden;
+  container-type: size;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--lg-ease);
+}
+.itemDetailPage.lg-trailer-on .lg-trailer { opacity: 1; }
+.lg-trailer iframe, .lg-trailer video {
+  position: absolute; top: 50%; left: 50%;
+  width: max(100cqw, 177.78cqh); height: max(100cqh, 56.25cqw);
+  transform: translate(-50%, -50%);
+  border: 0; background: #000; object-fit: cover;
+}
+/* Overscan YouTube a little to crop its title bar and watermark */
+.lg-trailer iframe { transform: translate(-50%, -50%) scale(1.18); }
+
+.lg-trailer-mute {
+  position: absolute; z-index: 5;
+  top: 20px; right: max(20px, var(--lg-gutter));
+  width: 44px; height: 44px; border-radius: 50%; border: 0;
+  display: grid; place-items: center;
+  color: var(--lg-on-glass); cursor: pointer;
+  opacity: 0; visibility: hidden;
+  transition: opacity .4s, visibility 0s .4s, transform .35s var(--lg-spring);
+}
+.lg-trailer-mute svg { width: 22px; height: 22px; }
+.itemDetailPage.lg-trailer-on .lg-trailer-mute { opacity: 1; visibility: visible; transition: opacity .4s, transform .35s var(--lg-spring); }
+.lg-trailer-mute:hover { transform: scale(1.08); }
+@media (max-width: 759px) { .lg-trailer-mute { top: 12px; right: 66px; } }
+
 .itemDetailPage.lg-cinematic .itemBackdrop,
 .itemDetailPage.lg-cinematic .detailLogo,
 .itemDetailPage.lg-cinematic .detailPagePrimaryContainer > .detailImageContainer,
@@ -767,6 +846,20 @@ html.lg-light .itemDetailPage.lg-cinematic .detailPageSecondaryContainer { margi
   padding-right: var(--lg-gutter) !important;
 }
 .itemDetailPage.lg-cinematic .detailSectionContent .overview { max-width: 760px; }
+/* Jellyfin's phone layout indents the header 37.5% for a poster (hidden here) and centres
+   the title, info line and buttons. The cinematic header is left-aligned everywhere. */
+.itemDetailPage.lg-cinematic .infoWrapper { padding-left: 0 !important; padding-right: 0 !important; }
+.itemDetailPage.lg-cinematic :is(.nameContainer, .itemName, .parentName, .subtitle, .itemMiscInfo, .itemGenres, .mainDetailButtons) {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.itemDetailPage.lg-cinematic .itemMiscInfo { align-items: center !important; flex-wrap: wrap; }
+@media (max-width: 759px) {
+  .lg-detail-logo { max-width: 72vw; max-height: 110px; margin-bottom: 14px; }
+}
 
 .lg-detail-logo {
   display: block;
